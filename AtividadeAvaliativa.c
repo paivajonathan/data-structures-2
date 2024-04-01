@@ -4,6 +4,37 @@
 #include <string.h>
 #include <time.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+#define CLEAR_COMMAND "cls"
+#elif defined(__linux__) || defined(__APPLE__)
+#define CLEAR_COMMAND "clear"
+#else
+#error "Unsupported operating system"
+#endif
+
+/* ==================== UTILS ==================== */
+void clear_screen(void)
+{
+  system(CLEAR_COMMAND);
+}
+
+void clear_buffer(void)
+{
+  int c;
+  while ((c = getchar()) != '\n' && c != EOF)
+    ;
+}
+
+void print_menu(void)
+{
+  puts("1: Cadastrar voo");
+  puts("2: Excluir voo");
+  puts("3: Pesquisar voos com base na origem, destino e data");
+  puts("4: Listar voos com menos de 10 assentos disponiveis");
+  puts("5: Visualizar o numero total de voos disponiveis");
+}
+/* ==================== UTILS ==================== */
+
 typedef struct Flight
 {
   int number;
@@ -16,6 +47,7 @@ typedef struct Flight
   struct Flight *left;
 } Flight;
 
+/* ==================== LIST ==================== */
 Flight **flight_list = NULL;
 int flight_list_length = 0;
 
@@ -54,14 +86,9 @@ void destroy_list(void)
   free(flight_list);
   flight_list = NULL;
 }
+/* ==================== LIST ==================== */
 
-void clear_buffer(void)
-{
-  int c;
-  while ((c = getchar()) != '\n' && c != EOF)
-    ;
-}
-
+/* ==================== TREE ==================== */
 Flight *generate_flights_tree(Flight **values, int start, int end)
 {
   if (start > end)
@@ -128,7 +155,7 @@ Flight *insert_flight_helper(Flight *root)
   Flight *new_flight = calloc(sizeof(Flight), 1);
   if (!new_flight)
     exit(1);
-  printf("Digite um número para o voo:\n");
+  printf("Digite um numero para o voo:\n");
   scanf("%d", &(new_flight->number));
 
   printf("Digite uma origem para o voo:\n");
@@ -137,7 +164,7 @@ Flight *insert_flight_helper(Flight *root)
   printf("Digite um destino para o voo:\n");
   scanf("%s", new_flight->destiny);
 
-  printf("Digite a quantidade de assentos disponíveis:\n");
+  printf("Digite a quantidade de assentos disponiveis:\n");
   scanf("%d", &(new_flight->dispon_seats));
 
   printf("Digite o horário do voo:\n");
@@ -214,11 +241,17 @@ Flight *delete_flight(Flight *root, int number)
 
 Flight *delete_flight_helper(Flight *root)
 {
+  if (!root)
+  {
+    puts("Nao ha voos disponiveis!");
+    return root;
+  }
+
   int number = 0;
 
   do
   {
-    printf("Digite o número do voo a ser excluído:\n");
+    printf("Digite o numero do voo a ser excluído:\n");
     scanf("%d", &number);
     clear_buffer();
   } while (number <= 0);
@@ -234,7 +267,7 @@ void print_flight(Flight *root)
   printf("Número: %d\n", root->number);
   printf("Origem: %s\n", root->origin);
   printf("Destino: %s\n", root->destiny);
-  printf("Assentos disponíveis: %d\n", root->dispon_seats);
+  printf("Assentos disponiveis: %d\n", root->dispon_seats);
   printf("Hora: %d\n", root->time);
   printf("Data %ld\n\n", root->date);
 }
@@ -252,6 +285,12 @@ void search_flights_by_data(Flight *root, char *origin, char *destiny, time_t da
 
 void search_flights_by_data_helper(Flight *root)
 {
+  if (!root)
+  {
+    puts("Nao ha voos disponiveis!");
+    return;
+  }
+
   char origin[50];
   char destiny[50];
   time_t date;
@@ -283,7 +322,13 @@ void list_flights_by_dispon_seats(Flight *root)
 
 void list_flights_by_dispon_seats_helper(Flight *root)
 {
-  puts("Listando todos os voos com menos de 10 assentos disponíveis:\n");
+  if (!root)
+  {
+    puts("Nao ha voos disponiveis!");
+    return;
+  }
+
+  puts("Listando todos os voos com menos de 10 assentos disponiveis:\n");
   list_flights_by_dispon_seats(root);
 }
 
@@ -295,6 +340,7 @@ int count_flights(Flight *root)
   int total_count = 0;
 
   total_count += count_flights(root->left);
+  print_flight(root);
   total_count++;
   total_count += count_flights(root->right);
 
@@ -303,7 +349,14 @@ int count_flights(Flight *root)
 
 void count_flights_helper(Flight *root)
 {
-  printf("Existem %d voos registrados.\n", count_flights(root));
+  if (!root)
+  {
+    puts("Nao ha voos disponiveis!");
+    return;
+  }
+
+  int registered_flights = count_flights(root);
+  printf("Existe(m) %d voo(s) registrado(s).\n", registered_flights);
 }
 
 void print_flight_tree(Flight *root, int level)
@@ -324,6 +377,7 @@ void destroy_flight_tree(Flight *root)
   destroy_flight_tree(root->right);
   free(root);
 }
+/* ==================== TREE ==================== */
 
 int main(void)
 {
@@ -332,7 +386,8 @@ int main(void)
 
   do
   {
-    printf("Digite uma opção:\n");
+    print_menu();
+    printf("Digite uma opcao:\n");
     scanf("%d", &option);
     clear_buffer();
 
