@@ -49,8 +49,17 @@ void print_list(void)
 
 void destroy_list(void)
 {
+  if (!flight_list)
+    return;
   free(flight_list);
   flight_list = NULL;
+}
+
+void clear_buffer(void)
+{
+  int c;
+  while ((c = getchar()) != '\n' && c != EOF)
+    ;
 }
 
 Flight *generate_flights_tree(Flight **values, int start, int end)
@@ -62,22 +71,6 @@ Flight *generate_flights_tree(Flight **values, int start, int end)
   root->left = generate_flights_tree(values, start, mid - 1);
   root->right = generate_flights_tree(values, mid + 1, end);
   return root;
-}
-
-Flight *create_flight(int number)
-{
-  Flight *new_flight = calloc(sizeof(Flight), 1);
-  if (!new_flight)
-    exit(1);
-  new_flight->number = number;
-  strcpy(new_flight->origin, "");
-  strcpy(new_flight->destiny, "");
-  new_flight->dispon_seats = 0;
-  new_flight->time = 0;
-  new_flight->date = 0;
-  new_flight->left = NULL;
-  new_flight->right = NULL;
-  return new_flight;
 }
 
 /* Verificar se tá balanceada */
@@ -113,7 +106,7 @@ bool is_balanced(Flight *root)
 }
 /* Verificar se tá balanceada */
 
-Flight *insert(Flight *root, Flight *new_flight)
+Flight *insert_flight(Flight *root, Flight *new_flight)
 {
   if (!root)
   {
@@ -122,15 +115,15 @@ Flight *insert(Flight *root, Flight *new_flight)
   }
 
   if (new_flight->number < root->number)
-    root->left = insert(root->left, new_flight);
+    root->left = insert_flight(root->left, new_flight);
 
   else if (new_flight->number > root->number)
-    root->right = insert(root->right, new_flight);
+    root->right = insert_flight(root->right, new_flight);
 
   return root;
 }
 
-Flight *register_flight(Flight *root)
+Flight *insert_flight_helper(Flight *root)
 {
   Flight *new_flight = calloc(sizeof(Flight), 1);
   if (!new_flight)
@@ -156,10 +149,11 @@ Flight *register_flight(Flight *root)
   new_flight->left = NULL;
   new_flight->right = NULL;
 
-  root = insert(root, new_flight);
+  root = insert_flight(root, new_flight);
 
   if (!is_balanced(root))
   {
+    destroy_list();
     append_flights_on_list(root);
     root = generate_flights_tree(flight_list, 0, flight_list_length - 1);
   }
@@ -218,6 +212,21 @@ Flight *delete_flight(Flight *root, int number)
   return root;
 }
 
+Flight *delete_flight_helper(Flight *root)
+{
+  int number = 0;
+
+  do
+  {
+    printf("Digite o número do voo a ser excluído:\n");
+    scanf("%d", &number);
+    clear_buffer();
+  } while (number <= 0);
+
+  root = delete_flight(root, number);
+  return root;
+}
+
 void print_flight(Flight *root)
 {
   if (!root)
@@ -230,15 +239,71 @@ void print_flight(Flight *root)
   printf("Data %ld\n\n", root->date);
 }
 
-void search_flights(Flight *root, char *origin, char *destiny, time_t date)
+void search_flights_by_data(Flight *root, char *origin, char *destiny, time_t date)
 {
   if (!root)
     return;
-  search_flights(root->right, origin, destiny, date);
+  search_flights_by_data(root->right, origin, destiny, date);
   if (strcmp(root->origin, origin) == 0 &&
       strcmp(root->destiny, destiny) == 0 && root->date == date)
     print_flight(root);
-  search_flights(root->left, origin, destiny, date);
+  search_flights_by_data(root->left, origin, destiny, date);
+}
+
+void search_flights_by_data_helper(Flight *root)
+{
+  char origin[50];
+  char destiny[50];
+  time_t date;
+
+  printf("Digite a origem do voo:\n");
+  scanf("%50s", origin);
+  clear_buffer();
+
+  printf("Digite o destino:\n");
+  scanf("%50s", destiny);
+  clear_buffer();
+
+  printf("Digite a data da viagem:\n");
+  scanf("%ld", &date);
+  clear_buffer();
+
+  search_flights_by_data(root, origin, destiny, date);
+}
+
+void list_flights_by_dispon_seats(Flight *root)
+{
+  if (!root)
+    return;
+  list_flights_by_dispon_seats(root->right);
+  if (root->dispon_seats < 10)
+    print_flight(root);
+  list_flights_by_dispon_seats(root->left);
+}
+
+void list_flights_by_dispon_seats_helper(Flight *root)
+{
+  puts("Listando todos os voos com menos de 10 assentos disponíveis:\n");
+  list_flights_by_dispon_seats(root);
+}
+
+int count_flights(Flight *root)
+{
+  if (!root)
+    return 0;
+
+  int total_count = 0;
+
+  total_count += count_flights(root->left);
+  total_count++;
+  total_count += count_flights(root->right);
+
+  return total_count;
+}
+
+void count_flights_helper(Flight *root)
+{
+  printf("Existem %d voos registrados.\n", count_flights(root));
 }
 
 void print_flight_tree(Flight *root, int level)
@@ -246,7 +311,7 @@ void print_flight_tree(Flight *root, int level)
   if (!root)
     return;
   print_flight_tree(root->right, level + 4);
-  // printf("%*c%d\n", level, ' ', root->number);
+  printf("%*c%d\n", level, ' ', root->number);
   print_flight(root);
   print_flight_tree(root->left, level + 4);
 }
@@ -263,10 +328,39 @@ void destroy_flight_tree(Flight *root)
 int main(void)
 {
   Flight *root = NULL;
-  root = register_flight(root);
-  root = register_flight(root);
-  print_flight_tree(root, 0);
+  int option = 0;
+
+  do
+  {
+    printf("Digite uma opção:\n");
+    scanf("%d", &option);
+    clear_buffer();
+
+    switch (option)
+    {
+    case 1:
+      root = insert_flight_helper(root);
+      break;
+    case 2:
+      root = delete_flight_helper(root);
+      break;
+    case 3:
+      search_flights_by_data_helper(root);
+      break;
+    case 4:
+      list_flights_by_dispon_seats_helper(root);
+      break;
+    case 5:
+      count_flights_helper(root);
+      break;
+    default:
+      puts("Saindo do programa...\n");
+      break;
+    }
+  } while (option != 0);
+
   destroy_list();
   destroy_flight_tree(root);
+
   return 0;
 }
