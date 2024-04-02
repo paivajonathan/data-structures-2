@@ -40,6 +40,7 @@ void print_menu(void)
   puts("5: Visualizar o numero total de voos disponiveis");
   puts("6: Listar voos com assentos disponiveis ordenados por data e hora");
   puts("7: Gerar 7 voos aleatorios");
+  puts("0: Sair do programa");
 }
 
 int max_value(int a, int b)
@@ -118,6 +119,9 @@ void print_flight(Flight *root)
 
 void print_list(void)
 {
+  if (!flight_list)
+    puts("\nNenhum voo encontrado.");
+
   for (int i = 0; i < flight_list_length; i++)
     print_flight(flight_list[i]);
 }
@@ -286,14 +290,23 @@ int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
   return total_count;
 }
 
-void list_flight_by_max_seats(Flight *root)
+int list_flight_by_max_seats(Flight *root)
 {
   if (!root)
-    return;
-  list_flight_by_max_seats(root->right);
-  if (root->seats < 10)
+    return 0;
+
+  int total_count = 0;
+
+  total_count += list_flight_by_max_seats(root->right);
+  
+  if (root->seats < 10) {
+    total_count++;
     print_flight(root);
-  list_flight_by_max_seats(root->left);
+  }
+  
+  total_count += list_flight_by_max_seats(root->left);
+  
+  return total_count;
 }
 
 int count_flights(Flight *root)
@@ -311,14 +324,24 @@ int count_flights(Flight *root)
   return total_count;
 }
 
-void list_flights_with_disponible_seats(Flight *root)
+int list_flights_with_disponible_seats(Flight *root)
 {
   if (!root)
-    return;
-  list_flights_with_disponible_seats(root->left);
+    return 0;
+
+  int total_count = 0;
+
+  total_count += list_flights_with_disponible_seats(root->left);
+  
   if (root->seats)
+  {
+    total_count++;
     append_on_list(root);
-  list_flights_with_disponible_seats(root->right);
+  }
+  
+  total_count += list_flights_with_disponible_seats(root->right);
+  
+  return total_count;
 }
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
 
@@ -490,19 +513,20 @@ void list_flights_by_max_seats_helper(Flight *root)
 {
   if (!root)
   {
-    puts("Nao ha voos disponiveis!");
+    puts("\nNao ha voos disponiveis!");
     return;
   }
 
-  puts("Listando todos os voos com menos de 10 assentos disponiveis:\n");
-  list_flight_by_max_seats(root);
+  puts("\nListando todos os voos com menos de 10 assentos disponiveis:");
+  int quantity_found = list_flight_by_max_seats(root);
+  if (!quantity_found) puts("Nenhum foi encontrado.");
 }
 
 void count_flights_helper(Flight *root)
 {
   if (!root)
   {
-    puts("Nao ha voos disponiveis!");
+    puts("\nNao ha voos disponiveis!");
     return;
   }
 
@@ -531,24 +555,33 @@ void list_flights_with_disponible_seats_helper(Flight *root)
 {
   if (!root)
   {
-    puts("Nao ha voos disponiveis!");
+    puts("\nNao ha voos disponiveis!");
     return;
   }
+  
   destroy_list();
-  list_flights_with_disponible_seats(root);
+  int found_quantity = list_flights_with_disponible_seats(root);
+  
+  if (!found_quantity) 
+  {
+    puts("\nNenhum voo encontrado.");
+    return;
+  }
+  
   qsort(flight_list, flight_list_length, sizeof(Flight *), compare_flights_by_datetime);
+
+  puts("\nListando todos os voos com assentos disponiveis:");
   print_list();
 }
 
-void generate_random_name(char name[], int length)
+void generate_random_string(char name[], int length)
 {
-  // Generate random lowercase letters and store them in the name array
   for (int i = 0; i < length; i++)
     name[i] = 'a' + rand() % 26;
-  name[length] = '\0'; // Null-terminate the string
+  name[length] = '\0';
 }
 
-int random_int(int min, int max)
+int generate_random_integer(int min, int max)
 {
   return min + rand() % (max - min + 1);
 }
@@ -557,26 +590,27 @@ Flight *generate_random_flights(Flight *root)
 {
   if (count_flights(root) != 0)
   {
-    puts("Ja existem voos presentes.");
+    puts("\nJa existem voos presentes.");
     return root;
   }
 
   int generated_count = 7;
+  printf("\nGerando %d voos aleatorios...\n", generated_count);
+  
   destroy_list();
-
   for (int i = 0; i < generated_count; i++)
   {
     Flight *generated_flight = calloc(sizeof(Flight), 1);
     if (!generated_flight)
       exit(EXIT_FAILURE);
     generated_flight->number = current_flight_id++;
-    generate_random_name(generated_flight->origin, 50);
-    generate_random_name(generated_flight->destiny, 50);
-    generated_flight->seats = random_int(0, 500);
-    generated_flight->date.year = random_int(1900, 2100);
-    generated_flight->date.month = random_int(1, 12);
-    generated_flight->date.day = random_int(1, 31);
-    generated_flight->time = random_int(0, 2300);
+    generate_random_string(generated_flight->origin, 50);
+    generate_random_string(generated_flight->destiny, 50);
+    generated_flight->seats = generate_random_integer(0, 500);
+    generated_flight->date.year = generate_random_integer(1900, 2100);
+    generated_flight->date.month = generate_random_integer(1, 12);
+    generated_flight->date.day = generate_random_integer(1, 31);
+    generated_flight->time = generate_random_integer(0, 2300);
     generated_flight->left = NULL;
     generated_flight->right = NULL;
     append_on_list(generated_flight);
