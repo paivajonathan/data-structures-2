@@ -33,14 +33,70 @@ void wait_user(void)
 
 void print_menu(void)
 {
-  puts("1: Cadastrar voo");
+  puts("\n1: Cadastrar voo");
   puts("2: Excluir voo");
   puts("3: Pesquisar voos com base na origem, destino e data");
   puts("4: Listar voos com menos de 10 assentos disponiveis");
   puts("5: Visualizar o numero total de voos disponiveis");
   puts("6: Listar voos com assentos disponiveis ordenados por data e hora");
 }
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+// Function to parse date string and populate a struct tm object
+int parse_date(const char *date_string, struct tm *tm_struct)
+{
+  char *token;
+
+  char *date_copy = malloc(strlen(date_string) + 1);
+  if (date_copy == NULL)
+    return 0;
+  strcpy(date_copy, date_string);
+
+  // Extract day
+  token = strtok(date_copy, "/");
+  if (token == NULL)
+    return 0; // Invalid date string
+  int day = atoi(token);
+  if (day < 1 || day > 31)
+    return 0; // Day out of range
+  tm_struct->tm_mday = day;
+
+  // Extract month
+  token = strtok(NULL, "/");
+  if (token == NULL)
+    return 0; // Invalid date string
+  int month = atoi(token);
+  if (month < 1 || month > 12)
+    return 0;                    // Month out of range
+  tm_struct->tm_mon = month - 1; // tm_mon is 0-based
+
+  // Extract year
+  token = strtok(NULL, "/");
+  if (token == NULL)
+    return 0; // Invalid date string
+  int year = atoi(token);
+  if (year < 1900)                  // Assuming years before 1900 are invalid for this application
+    return 0;                       // Year out of range
+  tm_struct->tm_year = year - 1900; // tm_year is years since 1900
+
+  // Free dynamically allocated memory
+  free(date_copy);
+
+  return 1; // Parsing successful
+}
+
 /* ==================== UTILS ==================== */
+
+typedef struct Date
+{
+  int year;
+  int month;
+  int day;
+} Date;
 
 typedef struct Flight
 {
@@ -49,7 +105,7 @@ typedef struct Flight
   char destiny[50];
   int seats;
   int time;
-  int date;
+  Date date;
   struct Flight *right;
   struct Flight *left;
 } Flight;
@@ -95,7 +151,7 @@ void print_flight(Flight *root)
   printf("Origem: %s\n", root->origin);
   printf("Destino: %s\n", root->destiny);
   printf("Assentos disponiveis: %d\n", root->seats);
-  printf("Data %d\n", root->date);
+  printf("Data: %02d/%02d/%04d\n", root->date.day, root->date.month, root->date.year);
   printf("Hora: %d\n", root->time);
 }
 
@@ -177,33 +233,67 @@ Flight *insert_flight(Flight *root, Flight *new_flight)
 
 Flight *insert_flight_helper(Flight *root)
 {
-  clear_screen();
-
   Flight *new_flight = calloc(sizeof(Flight), 1);
   if (!new_flight)
     exit(1);
 
-  printf("Digite um numero para o voo:\n");
-  scanf("%d", &(new_flight->number));
+  do
+  {
+    printf("Digite um numero para o voo:\n");
+    scanf("%d", &(new_flight->number));
+    clear_buffer();
+    if (new_flight->number > 0)
+      break;
+    puts("Numero invalido!");
+  } while (true);
 
   printf("Digite uma origem para o voo:\n");
   scanf(" %50[^\n]", new_flight->origin);
+  clear_buffer();
 
   printf("Digite um destino para o voo:\n");
   scanf(" %50[^\n]", new_flight->destiny);
+  clear_buffer();
 
   do
   {
     printf("Digite a quantidade de assentos disponiveis:\n");
     scanf("%d", &(new_flight->seats));
+    clear_buffer();
     if (new_flight->seats >= 0)
       break;
     puts("Quantidade invalida!");
   } while (true);
 
-  printf("Digite a data do voo:\n");
-  scanf("%d", &(new_flight->date));
-  clear_buffer();
+  do
+  {
+    printf("Digite o ano do voo:\n");
+    scanf("%d", &(new_flight->date.year));
+    clear_buffer();
+    if (new_flight->date.year > 1900)
+      break;
+    puts("Ano invalido!");
+  } while (true);
+
+  do
+  {
+    printf("Digite o mes do voo:\n");
+    scanf("%d", &(new_flight->date.month));
+    clear_buffer();
+    if (new_flight->date.month >= 1 && new_flight->date.month <= 12)
+      break;
+    puts("Mes invalido!");
+  } while (true);
+
+  do
+  {
+    printf("Digite o dia do voo:\n");
+    scanf("%d", &(new_flight->date.day));
+    clear_buffer();
+    if (new_flight->date.day >= 1 && new_flight->date.day <= 31)
+      break;
+    puts("Dia invalido!");
+  } while (true);
 
   printf("Digite o horario do voo:\n");
   scanf("%d", &(new_flight->time));
@@ -216,6 +306,7 @@ Flight *insert_flight_helper(Flight *root)
 
   if (!is_balanced(root))
   {
+    puts("Nao esta balanceada");
     destroy_list();
     append_flights_on_list(root);
     root = generate_flights_tree(flight_list, 0, flight_list_length - 1);
@@ -296,13 +387,17 @@ Flight *delete_flight_helper(Flight *root)
   return root;
 }
 
-void search_flights_by_data(Flight *root, char *origin, char *destiny, int date)
+void search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
 {
   if (!root)
     return;
   search_flights_by_data(root->right, origin, destiny, date);
-  if (strcmp(root->origin, origin) == 0 &&
-      strcmp(root->destiny, destiny) == 0 && root->date == date)
+  if (
+      strcmp(root->origin, origin) == 0 &&
+      strcmp(root->destiny, destiny) == 0 &&
+      root->date.year == date.year &&
+      root->date.month == date.month &&
+      root->date.day == date.day)
     print_flight(root);
   search_flights_by_data(root->left, origin, destiny, date);
 }
@@ -317,7 +412,7 @@ void search_flights_by_data_helper(Flight *root)
 
   char origin[50];
   char destiny[50];
-  int date;
+  Date date;
 
   printf("Digite a origem do voo:\n");
   scanf("%50s", origin);
@@ -327,9 +422,35 @@ void search_flights_by_data_helper(Flight *root)
   scanf("%50s", destiny);
   clear_buffer();
 
-  printf("Digite a data da viagem:\n");
-  scanf("%d", &date);
-  clear_buffer();
+  do
+  {
+    printf("Digite o ano do voo:\n");
+    scanf("%d", &(date.year));
+    clear_buffer();
+    if (date.year > 1900)
+      break;
+    puts("Ano invalido!");
+  } while (true);
+
+  do
+  {
+    printf("Digite o mes do voo:\n");
+    scanf("%d", &(date.month));
+    clear_buffer();
+    if (date.month >= 1 && date.month <= 12)
+      break;
+    puts("Mes invalido!");
+  } while (true);
+
+  do
+  {
+    printf("Digite o dia do voo:\n");
+    scanf("%d", &(date.day));
+    clear_buffer();
+    if (date.day >= 1 && date.day <= 31)
+      break;
+    puts("Dia invalido!");
+  } while (true);
 
   search_flights_by_data(root, origin, destiny, date);
 }
@@ -398,8 +519,14 @@ int compare_flights(const void *a, const void *b)
   Flight *flight_a = *(Flight **)a;
   Flight *flight_b = *(Flight **)b;
 
-  if (flight_a->date != flight_b->date)
-    return flight_a->date - flight_b->date;
+  if (flight_a->date.year != flight_b->date.year)
+    return flight_a->date.year - flight_b->date.year;
+
+  if (flight_a->date.month != flight_b->date.month)
+    return flight_a->date.month - flight_b->date.month;
+
+  if (flight_a->date.day != flight_b->date.day)
+    return flight_a->date.day - flight_b->date.day;
 
   return flight_a->time - flight_b->time;
 }
@@ -444,7 +571,6 @@ int main(void)
 
   do
   {
-    clear_screen();
     print_menu();
     printf("Digite uma opcao:\n");
     scanf("%d", &option);
