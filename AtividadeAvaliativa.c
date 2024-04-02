@@ -29,6 +29,18 @@ int max_value(int a, int b)
 {
   return (a >= b) ? a : b;
 }
+
+void generate_random_string(char name[], int length)
+{
+  for (int i = 0; i < length; i++)
+    name[i] = 'a' + rand() % 26;
+  name[length] = '\0';
+}
+
+int generate_random_integer(int min, int max)
+{
+  return min + rand() % (max - min + 1);
+}
 /* ==================== UTILS ==================== */
 
 /* ==================== STRUCTURES ==================== */
@@ -75,9 +87,10 @@ void append_on_list(Flight *flight)
     flight_list = realloc(flight_list, sizeof(Flight *) * (flight_list_length + 1));
   }
 
-  if (flight_list == NULL)
+  // If it's still NULL
+  if (!flight_list)
   {
-    fprintf(stderr, "Memory allocation failed\n");
+    fprintf(stderr, "Ocorreu um erro de alocacao de memoria\n");
     exit(EXIT_FAILURE);
   }
 
@@ -161,6 +174,20 @@ bool is_tree_balanced(Flight *root)
     return true;
 
   return false;
+}
+
+Flight *search_flight(Flight *root, int number)
+{
+  if (!root)
+    return root;
+
+  if (number < root->number)
+    return search_flight(root->left, number);
+
+  else if (number > root->number)
+    return search_flight(root->right, number);
+
+  return root;
 }
 
 Flight *insert_flight(Flight *root, Flight *new_flight)
@@ -252,26 +279,12 @@ void destroy_flight_tree(Flight *root)
 /* ==================== TREE ==================== */
 
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
-Flight *search_flight_by_number(Flight *root, int number)
-{
-  if (!root)
-    return root;
-
-  if (number < root->number)
-    return search_flight_by_number(root->left, number);
-
-  else if (number > root->number)
-    return search_flight_by_number(root->right, number);
-
-  return root;
-}
-
 int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
 {
-  if (!root)
-    return 0;
-
   int total_count = 0;
+
+  if (!root)
+    return total_count;
 
   total_count += search_flights_by_data(root->right, origin, destiny, date);
 
@@ -293,10 +306,10 @@ int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
 
 int list_flight_by_max_seats(Flight *root)
 {
-  if (!root)
-    return 0;
-
   int total_count = 0;
+
+  if (!root)
+    return total_count;
 
   total_count += list_flight_by_max_seats(root->right);
 
@@ -313,10 +326,10 @@ int list_flight_by_max_seats(Flight *root)
 
 int count_flights(Flight *root)
 {
-  if (!root)
-    return 0;
-
   int total_count = 0;
+
+  if (!root)
+    return total_count;
 
   total_count += count_flights(root->left);
 
@@ -329,10 +342,10 @@ int count_flights(Flight *root)
 
 int list_flights_with_disponible_seats(Flight *root)
 {
-  if (!root)
-    return 0;
-
   int total_count = 0;
+
+  if (!root)
+    return total_count;
 
   total_count += list_flights_with_disponible_seats(root->left);
 
@@ -437,6 +450,8 @@ Flight *insert_flight_helper(Flight *root)
     root = generate_flights_tree(flight_list, 0, flight_list_length - 1);
   }
 
+  puts("\nVoo cadastrado com sucesso!");
+
   return root;
 }
 
@@ -460,7 +475,7 @@ Flight *delete_flight_helper(Flight *root)
     puts("Numero invalido!");
   } while (true);
 
-  if (!search_flight_by_number(root, number))
+  if (!search_flight(root, number))
   {
     puts("\nNao foi encontrado um voo com esse numero.");
   }
@@ -545,6 +560,7 @@ void list_flights_by_max_seats_helper(Flight *root)
 
   puts("\nListando todos os voos com menos de 10 assentos disponiveis:");
   int quantity_found = list_flight_by_max_seats(root);
+
   if (!quantity_found)
     puts("Nenhum foi encontrado.");
 }
@@ -577,7 +593,7 @@ int compare_flights_by_datetime(const void *a, const void *b)
 
   if (flight_a->time.hours != flight_b->time.hours)
     return flight_a->time.hours != flight_b->time.hours;
-  
+
   return flight_a->time.minutes != flight_b->time.minutes;
 }
 
@@ -602,18 +618,6 @@ void list_flights_with_disponible_seats_helper(Flight *root)
 
   puts("\nListando todos os voos com assentos disponiveis:");
   print_list();
-}
-
-void generate_random_string(char name[], int length)
-{
-  for (int i = 0; i < length; i++)
-    name[i] = 'a' + rand() % 26;
-  name[length] = '\0';
-}
-
-int generate_random_integer(int min, int max)
-{
-  return min + rand() % (max - min + 1);
 }
 
 Flight *generate_random_flights(Flight *root)
