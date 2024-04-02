@@ -76,6 +76,10 @@ int flight_list_length = 0;
 /* ==================== STRUCTURES ==================== */
 
 /* ==================== LIST ==================== */
+
+/**
+ * Places flight structure pointer into list last position.
+*/
 void append_on_list(Flight *flight)
 {
   // List isn't created yet
@@ -132,6 +136,10 @@ void destroy_list(void)
 /* ==================== LIST ==================== */
 
 /* ==================== TREE ==================== */
+
+/**
+ * Places several flight structures into the list, following the tree ascending order. 
+*/
 void append_flights_on_list(Flight *root)
 {
   if (!root)
@@ -141,6 +149,9 @@ void append_flights_on_list(Flight *root)
   append_flights_on_list(root->right);
 }
 
+/**
+ * Creates the flights tree based on the flights placed into the list.
+*/
 Flight *generate_flights_tree(Flight **values, int start, int end)
 {
   if (start > end)
@@ -152,6 +163,9 @@ Flight *generate_flights_tree(Flight **values, int start, int end)
   return root;
 }
 
+/**
+ * Searches flight based on its number.
+*/
 Flight *search_flight(Flight *root, int number)
 {
   if (!root)
@@ -166,6 +180,9 @@ Flight *search_flight(Flight *root, int number)
   return root;
 }
 
+/**
+ * Puts flight pointer in the correct place, increasing current flight id.
+*/
 Flight *insert_flight(Flight *root, Flight *new_flight)
 {
   if (!root)
@@ -184,6 +201,9 @@ Flight *insert_flight(Flight *root, Flight *new_flight)
   return root;
 }
 
+/**
+ * Deletes flight pointer from the tree.
+*/
 Flight *delete_flight(Flight *root, int number)
 {
   if (!root)
@@ -237,6 +257,17 @@ Flight *delete_flight(Flight *root, int number)
   return root;
 }
 
+/**
+ * Calculates the height of the tree.
+ * 
+ * The height of a tree is defined as the length of the longest path
+ * from the root node to a leaf node.
+ * 
+ * The height of an empty tree (NULL pointer) is considered 0.
+ *
+ * @param flight A pointer to the root node of the binary tree.
+ * @return The height of the binary tree.
+ */
 int get_tree_height(Flight *flight)
 {
   if (!flight)
@@ -506,6 +537,7 @@ Flight *delete_flight_helper(Flight *root)
   if (!search_flight(root, number))
   {
     puts("\nNao foi encontrado um voo com esse numero.");
+    return root;
   }
 
   root = delete_flight(root, number);
