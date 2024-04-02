@@ -100,17 +100,16 @@ void append_on_list(Flight *flight)
   flight_list[flight_list_length++] = flight;
 }
 
-void print_flight(Flight *root, int spaces)
+void print_flight(Flight *root)
 {
   if (!root)
     return;
-  char delimiter = spaces ? ' ' : '\0';
-  printf("\n%*cNumero: %d\n", spaces, delimiter, root->number);
-  printf("%*cOrigem: %s\n", spaces, delimiter, root->origin);
-  printf("%*cDestino: %s\n", spaces, delimiter, root->destiny);
-  printf("%*cAssentos disponiveis: %d\n", spaces, delimiter, root->seats);
-  printf("%*cData: %02d/%02d/%04d\n", spaces, delimiter, root->date.day, root->date.month, root->date.year);
-  printf("%*cHora: %02d:%02d\n", spaces, delimiter, root->time.hours, root->time.minutes);
+  printf("\nNumero: %d\n", root->number);
+  printf("Origem: %s\n", root->origin);
+  printf("Destino: %s\n", root->destiny);
+  printf("Assentos disponiveis: %d\n", root->seats);
+  printf("Data: %02d/%02d/%04d\n", root->date.day, root->date.month, root->date.year);
+  printf("Hora: %02d:%02d\n", root->time.hours, root->time.minutes);
 }
 
 void print_list(void)
@@ -119,7 +118,7 @@ void print_list(void)
     puts("\nNenhum voo encontrado.");
 
   for (int i = 0; i < flight_list_length; i++)
-    print_flight(flight_list[i], 0);
+    print_flight(flight_list[i]);
 }
 
 void destroy_list(void)
@@ -192,10 +191,10 @@ Flight *delete_flight(Flight *root, int number)
 
   if (number < root->number)
     root->left = delete_flight(root->left, number);
-  
+
   else if (number > root->number)
     root->right = delete_flight(root->right, number);
-  
+
   else
   {
     // If it doesn't have any children, free its memory and return NULL to who
@@ -288,9 +287,9 @@ void print_flight_tree(Flight *root, int level)
 {
   if (!root)
     return;
-  print_flight_tree(root->right, level + 8);
-  print_flight(root, level);
-  print_flight_tree(root->left, level + 8);
+  print_flight_tree(root->right, level + 4);
+  printf("%*c-%d-\n", level, ' ', root->number);
+  print_flight_tree(root->left, level + 4);
 }
 
 void destroy_flight_tree(Flight *root)
@@ -311,7 +310,7 @@ int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
   if (!root)
     return total_count;
 
-  total_count += search_flights_by_data(root->right, origin, destiny, date);
+  total_count += search_flights_by_data(root->left, origin, destiny, date);
 
   if (
       strcmp(root->origin, origin) == 0 &&
@@ -321,10 +320,10 @@ int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
       root->date.day == date.day)
   {
     total_count++;
-    print_flight(root, 0);
+    print_flight(root);
   }
 
-  total_count += search_flights_by_data(root->left, origin, destiny, date);
+  total_count += search_flights_by_data(root->right, origin, destiny, date);
 
   return total_count;
 }
@@ -336,15 +335,15 @@ int list_flight_by_max_seats(Flight *root)
   if (!root)
     return total_count;
 
-  total_count += list_flight_by_max_seats(root->right);
+  total_count += list_flight_by_max_seats(root->left);
 
   if (root->seats < 10)
   {
     total_count++;
-    print_flight(root, 0);
+    print_flight(root);
   }
 
-  total_count += list_flight_by_max_seats(root->left);
+  total_count += list_flight_by_max_seats(root->right);
 
   return total_count;
 }
@@ -458,7 +457,7 @@ Flight *insert_flight_helper(Flight *root)
     puts("Digite os minutos:");
     scanf("%d", &(new_flight->time.minutes));
     clear_buffer();
-    if (new_flight->time.minutes >= 0 && new_flight->time.minutes < 59)
+    if (new_flight->time.minutes >= 0 && new_flight->time.minutes <= 59)
       break;
     puts("Minutos invalidos");
   } while (true);
@@ -571,7 +570,7 @@ void search_flights_by_data_helper(Flight *root)
 
   puts("\nListando todos os voos que possuem esses dados:");
   int quantity_found = search_flights_by_data(root, origin, destiny, date);
-  
+
   if (!quantity_found)
     puts("Nenhum foi encontrado.");
 }
@@ -669,7 +668,7 @@ void print_flight_tree_helper(Flight *root)
     return;
   }
 
-  puts("Mostrando todos os voos...");
+  puts("\nMostrando todos os voos...\n");
   print_flight_tree(root, 0);
 }
 /* ==================== OPERATION FUNCTIONS ==================== */
