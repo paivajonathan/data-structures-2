@@ -260,19 +260,30 @@ void destroy_flight_tree(Flight *root)
 /* ==================== TREE ==================== */
 
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
-void search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
+int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
 {
   if (!root)
-    return;
-  search_flights_by_data(root->right, origin, destiny, date);
+    return 0;
+
+  int total_count = 0;
+
+  total_count += search_flights_by_data(root->right, origin, destiny, date);
+
   if (
       strcmp(root->origin, origin) == 0 &&
       strcmp(root->destiny, destiny) == 0 &&
       root->date.year == date.year &&
       root->date.month == date.month &&
-      root->date.day == date.day)
+      root->date.day == date.day
+    )
+  {
+    total_count++;
     print_flight(root);
-  search_flights_by_data(root->left, origin, destiny, date);
+  }
+
+  total_count += search_flights_by_data(root->left, origin, destiny, date);
+
+  return total_count;
 }
 
 void list_flight_by_max_seats(Flight *root)
@@ -469,7 +480,10 @@ void search_flights_by_data_helper(Flight *root)
     puts("Dia invalido!");
   } while (true);
 
-  search_flights_by_data(root, origin, destiny, date);
+  puts("\nListando todos os voos que possuem esses dados:");
+  int quantity_found = search_flights_by_data(root, origin, destiny, date);
+  if (!quantity_found)
+    puts("Nenhum foi encontrado.");
 }
 
 void list_flights_by_max_seats_helper(Flight *root)
