@@ -389,8 +389,12 @@ int list_flights_with_disponible_seats(Flight *root)
 Flight *insert_flight_helper(Flight *root)
 {
   Flight *new_flight = calloc(sizeof(Flight), 1);
+
   if (!new_flight)
-    exit(1);
+  {
+    fprintf(stderr, "Ocorreu um erro de alocacao de memoria\n");
+    exit(EXIT_FAILURE);
+  }
 
   new_flight->number = current_flight_id;
 
@@ -640,19 +644,30 @@ Flight *generate_random_flights(Flight *root)
   for (int i = 0; i < generated_count; i++)
   {
     Flight *generated_flight = calloc(sizeof(Flight), 1);
+
     if (!generated_flight)
+    {
+      fprintf(stderr, "Ocorreu um erro de alocacao de memoria\n");
       exit(EXIT_FAILURE);
+    }
+
     generated_flight->number = current_flight_id++;
+
     generate_random_string(generated_flight->origin, 50);
     generate_random_string(generated_flight->destiny, 50);
+
     generated_flight->seats = generate_random_integer(0, 500);
+
     generated_flight->date.year = generate_random_integer(1900, 2100);
     generated_flight->date.month = generate_random_integer(1, 12);
     generated_flight->date.day = generate_random_integer(1, 31);
+
     generated_flight->time.hours = generate_random_integer(0, 23);
     generated_flight->time.minutes = generate_random_integer(0, 59);
+
     generated_flight->left = NULL;
     generated_flight->right = NULL;
+
     append_on_list(generated_flight);
   }
 
