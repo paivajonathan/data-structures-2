@@ -467,7 +467,7 @@ void list_flights_with_disponible_seats(Flight *root)
   list_flights_with_disponible_seats(root->right);
 }
 
-int compare_flights(const void *a, const void *b)
+int compare_flights_by_datetime(const void *a, const void *b)
 {
   Flight *flight_a = *(Flight **)a;
   Flight *flight_b = *(Flight **)b;
@@ -493,7 +493,7 @@ void list_flights_with_disponible_seats_helper(Flight *root)
   }
   destroy_list();
   list_flights_with_disponible_seats(root);
-  qsort(flight_list, flight_list_length, sizeof(Flight *), compare_flights);
+  qsort(flight_list, flight_list_length, sizeof(Flight *), compare_flights_by_datetime);
   print_list();
 }
 
