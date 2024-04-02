@@ -35,12 +35,12 @@ void print_menu(void)
 {
   puts("\n1: Cadastrar voo");
   puts("2: Excluir voo");
-  puts("3: Pesquisar voos com base na origem, destino e data");
-  puts("4: Listar voos com menos de 10 assentos disponiveis");
-  puts("5: Visualizar o numero total de voos disponiveis");
-  puts("6: Listar voos com assentos disponiveis ordenados por data e hora");
-  puts("7: Gerar 7 voos aleatorios");
-  puts("0: Sair do programa");
+  puts("3: Gerar voos aleatorios");
+  puts("4: Pesquisar voos com base na origem, destino e data");
+  puts("5: Listar voos com menos de 10 assentos disponiveis");
+  puts("6: Visualizar o numero total de voos disponiveis");
+  puts("7: Listar voos com assentos disponiveis ordenados por data e hora");
+  puts("0: Sair do programa\n");
 }
 
 int max_value(int a, int b)
@@ -264,6 +264,20 @@ void destroy_flight_tree(Flight *root)
 /* ==================== TREE ==================== */
 
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
+Flight *search_flight_by_number(Flight *root, int number)
+{
+  if (!root)
+    return root;
+
+  if (number < root->number)
+    return search_flight_by_number(root->left, number);
+  
+  else if (number > root->number)
+    return search_flight_by_number(root->right, number);
+
+  return root;
+}
+
 int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
 {
   if (!root)
@@ -278,8 +292,7 @@ int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
       strcmp(root->destiny, destiny) == 0 &&
       root->date.year == date.year &&
       root->date.month == date.month &&
-      root->date.day == date.day
-    )
+      root->date.day == date.day)
   {
     total_count++;
     print_flight(root);
@@ -298,14 +311,15 @@ int list_flight_by_max_seats(Flight *root)
   int total_count = 0;
 
   total_count += list_flight_by_max_seats(root->right);
-  
-  if (root->seats < 10) {
+
+  if (root->seats < 10)
+  {
     total_count++;
     print_flight(root);
   }
-  
+
   total_count += list_flight_by_max_seats(root->left);
-  
+
   return total_count;
 }
 
@@ -332,15 +346,15 @@ int list_flights_with_disponible_seats(Flight *root)
   int total_count = 0;
 
   total_count += list_flights_with_disponible_seats(root->left);
-  
+
   if (root->seats)
   {
     total_count++;
     append_on_list(root);
   }
-  
+
   total_count += list_flights_with_disponible_seats(root->right);
-  
+
   return total_count;
 }
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
@@ -425,7 +439,7 @@ Flight *delete_flight_helper(Flight *root)
 {
   if (!root)
   {
-    puts("Nao ha voos disponiveis!");
+    puts("\nNao ha voos disponiveis!");
     return root;
   }
 
@@ -433,13 +447,18 @@ Flight *delete_flight_helper(Flight *root)
 
   do
   {
-    puts("Digite o numero do voo a ser excluído:");
+    puts("\nDigite o numero do voo a ser excluído:");
     scanf("%d", &number);
     clear_buffer();
     if (number > 0)
       break;
     puts("Numero invalido!");
   } while (true);
+
+  if (!search_flight_by_number(root, number))
+  {
+    puts("\nNao foi encontrado um voo com esse numero.");
+  }
 
   root = delete_flight(root, number);
 
@@ -449,6 +468,8 @@ Flight *delete_flight_helper(Flight *root)
     append_flights_on_list(root);
     root = generate_flights_tree(flight_list, 0, flight_list_length - 1);
   }
+
+  puts("\nVoo excluido com sucesso!");
 
   return root;
 }
@@ -519,7 +540,8 @@ void list_flights_by_max_seats_helper(Flight *root)
 
   puts("\nListando todos os voos com menos de 10 assentos disponiveis:");
   int quantity_found = list_flight_by_max_seats(root);
-  if (!quantity_found) puts("Nenhum foi encontrado.");
+  if (!quantity_found)
+    puts("Nenhum foi encontrado.");
 }
 
 void count_flights_helper(Flight *root)
@@ -558,16 +580,16 @@ void list_flights_with_disponible_seats_helper(Flight *root)
     puts("\nNao ha voos disponiveis!");
     return;
   }
-  
+
   destroy_list();
   int found_quantity = list_flights_with_disponible_seats(root);
-  
-  if (!found_quantity) 
+
+  if (!found_quantity)
   {
     puts("\nNenhum voo encontrado.");
     return;
   }
-  
+
   qsort(flight_list, flight_list_length, sizeof(Flight *), compare_flights_by_datetime);
 
   puts("\nListando todos os voos com assentos disponiveis:");
@@ -596,7 +618,7 @@ Flight *generate_random_flights(Flight *root)
 
   int generated_count = 7;
   printf("\nGerando %d voos aleatorios...\n", generated_count);
-  
+
   destroy_list();
   for (int i = 0; i < generated_count; i++)
   {
@@ -649,19 +671,19 @@ int main(void)
       root = delete_flight_helper(root);
       break;
     case 3:
-      search_flights_by_data_helper(root);
+      root = generate_random_flights(root);
       break;
     case 4:
-      list_flights_by_max_seats_helper(root);
+      search_flights_by_data_helper(root);
       break;
     case 5:
-      count_flights_helper(root);
+      list_flights_by_max_seats_helper(root);
       break;
     case 6:
-      list_flights_with_disponible_seats_helper(root);
+      count_flights_helper(root);
       break;
     case 7:
-      root = generate_random_flights(root);
+      list_flights_with_disponible_seats_helper(root);
       break;
     default:
       puts("Digite uma opcao valida!\n");
