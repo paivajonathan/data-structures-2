@@ -93,28 +93,17 @@ void append_flights_on_list(Flight *root)
   append_flights_on_list(root->right);
 }
 
-void print_flight(Flight *root)
+void print_flight(Flight *root, int spaces)
 {
   if (!root)
     return;
-  printf("\nNumero: %d\n", root->number);
-  printf("Origem: %s\n", root->origin);
-  printf("Destino: %s\n", root->destiny);
-  printf("Assentos disponiveis: %d\n", root->seats);
-  printf("Data: %02d/%02d/%04d\n", root->date.day, root->date.month, root->date.year);
-  printf("Hora: %02d:%02d\n", root->time.hours, root->time.minutes);
-}
-
-void print_flight_spaces(Flight *root, int spaces)
-{
-  if (!root)
-    return;
-  printf("\n%*cNumero: %d\n", spaces, ' ', root->number);
-  printf("%*cOrigem: %s\n", spaces, ' ', root->origin);
-  printf("%*cDestino: %s\n", spaces, ' ', root->destiny);
-  printf("%*cAssentos disponiveis: %d\n", spaces, ' ', root->seats);
-  printf("%*cData: %02d/%02d/%04d\n", spaces, ' ', root->date.day, root->date.month, root->date.year);
-  printf("%*cHora: %02d:%02d\n", spaces, ' ', root->time.hours, root->time.minutes);
+  char delimiter = spaces ? ' ' : '\0';
+  printf("\n%*cNumero: %d\n", spaces, delimiter, root->number);
+  printf("%*cOrigem: %s\n", spaces, delimiter, root->origin);
+  printf("%*cDestino: %s\n", spaces, delimiter, root->destiny);
+  printf("%*cAssentos disponiveis: %d\n", spaces, delimiter, root->seats);
+  printf("%*cData: %02d/%02d/%04d\n", spaces, delimiter, root->date.day, root->date.month, root->date.year);
+  printf("%*cHora: %02d:%02d\n", spaces, delimiter, root->time.hours, root->time.minutes);
 }
 
 void print_list(void)
@@ -123,7 +112,7 @@ void print_list(void)
     puts("\nNenhum voo encontrado.");
 
   for (int i = 0; i < flight_list_length; i++)
-    print_flight(flight_list[i]);
+    print_flight(flight_list[i], 0);
 }
 
 void destroy_list(void)
@@ -248,7 +237,7 @@ void print_flight_tree(Flight *root, int level)
   if (!root)
     return;
   print_flight_tree(root->right, level + 8);
-  print_flight_spaces(root, level);
+  print_flight(root, level);
   print_flight_tree(root->left, level + 8);
 }
 
@@ -294,7 +283,7 @@ int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
       root->date.day == date.day)
   {
     total_count++;
-    print_flight(root);
+    print_flight(root, 0);
   }
 
   total_count += search_flights_by_data(root->left, origin, destiny, date);
@@ -314,7 +303,7 @@ int list_flight_by_max_seats(Flight *root)
   if (root->seats < 10)
   {
     total_count++;
-    print_flight(root);
+    print_flight(root, 0);
   }
 
   total_count += list_flight_by_max_seats(root->left);
@@ -463,7 +452,7 @@ Flight *delete_flight_helper(Flight *root)
 
   do
   {
-    puts("\nDigite o numero do voo a ser excluído:");
+    puts("\nDigite o numero do voo a ser excluido:");
     scanf("%d", &number);
     clear_buffer();
     if (number > 0)
