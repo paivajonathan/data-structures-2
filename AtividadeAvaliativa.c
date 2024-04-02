@@ -25,6 +25,12 @@ void clear_buffer(void)
     ;
 }
 
+void wait_user(void)
+{
+  puts("Pressione ENTER para continuar...");
+  clear_buffer();
+}
+
 void print_menu(void)
 {
   puts("1: Cadastrar voo");
@@ -153,25 +159,32 @@ Flight *insert_flight(Flight *root, Flight *new_flight)
 Flight *insert_flight_helper(Flight *root)
 {
   Flight *new_flight = calloc(sizeof(Flight), 1);
+
   if (!new_flight)
     exit(1);
+
   printf("Digite um numero para o voo:\n");
   scanf("%d", &(new_flight->number));
 
   printf("Digite uma origem para o voo:\n");
-  scanf("%s", new_flight->origin);
+  scanf(" %50[^\n]", new_flight->origin);
 
   printf("Digite um destino para o voo:\n");
-  scanf("%s", new_flight->destiny);
+  scanf(" %50[^\n]", new_flight->destiny);
 
-  printf("Digite a quantidade de assentos disponiveis:\n");
-  scanf("%d", &(new_flight->dispon_seats));
-
-  printf("Digite o horário do voo:\n");
-  scanf("%d", &(new_flight->time));
+  do
+  {
+    printf("Digite a quantidade de assentos disponiveis:\n");
+    scanf("%d", &(new_flight->dispon_seats));
+    if (new_flight->dispon_seats >= 0) break;
+    puts("Quantidade invalida!");
+  } while (true);
 
   printf("Digite a data do voo:\n");
   scanf("%ld", &(new_flight->date));
+
+  printf("Digite o horário do voo:\n");
+  scanf("%d", &(new_flight->time));
 
   new_flight->left = NULL;
   new_flight->right = NULL;
