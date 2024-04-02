@@ -39,6 +39,7 @@ void print_menu(void)
   puts("4: Listar voos com menos de 10 assentos disponiveis");
   puts("5: Visualizar o numero total de voos disponiveis");
   puts("6: Listar voos com assentos disponiveis ordenados por data e hora");
+  puts("7: Gerar 7 voos aleatorios");
 }
 
 int max_value(int a, int b)
@@ -58,8 +59,8 @@ typedef struct Date
 typedef struct Flight
 {
   int number;
-  char origin[50];
-  char destiny[50];
+  char origin[51];
+  char destiny[51];
   int seats;
   int time;
   Date date;
@@ -67,7 +68,7 @@ typedef struct Flight
   struct Flight *left;
 } Flight;
 
-int flight_id = 1;
+int current_flight_id = 1;
 
 Flight **flight_list = NULL;
 int flight_list_length = 0;
@@ -174,7 +175,7 @@ Flight *insert_flight(Flight *root, Flight *new_flight)
   if (!root)
   {
     root = new_flight;
-    flight_id++;
+    current_flight_id++;
     return root;
   }
 
@@ -317,7 +318,7 @@ Flight *insert_flight_helper(Flight *root)
   if (!new_flight)
     exit(1);
 
-  new_flight->number = flight_id;
+  new_flight->number = current_flight_id;
 
   printf("Digite uma origem para o voo:\n");
   scanf(" %50[^\n]", new_flight->origin);
@@ -492,7 +493,7 @@ void count_flights_helper(Flight *root)
   }
 
   int registered_flights = count_flights(root);
-  printf("Existe(m) %d voo(s) registrado(s).\n", registered_flights);
+  printf("\nExiste(m) %d voo(s) registrado(s).\n", registered_flights);
 }
 
 int compare_flights_by_datetime(const void *a, const void *b)
@@ -524,10 +525,57 @@ void list_flights_with_disponible_seats_helper(Flight *root)
   qsort(flight_list, flight_list_length, sizeof(Flight *), compare_flights_by_datetime);
   print_list();
 }
+
+void generate_random_name(char name[], int length)
+{
+  // Generate random lowercase letters and store them in the name array
+  for (int i = 0; i < length; i++)
+    name[i] = 'a' + rand() % 26;
+  name[length] = '\0'; // Null-terminate the string
+}
+
+int random_int(int min, int max)
+{
+  return min + rand() % (max - min + 1);
+}
+
+Flight *generate_random_flights(Flight *root)
+{
+  if (count_flights(root) != 0)
+  {
+    puts("Ja existem voos presentes.");
+    return root;
+  }
+
+  int generated_count = 7;
+  destroy_list();
+
+  for (int i = 0; i < generated_count; i++)
+  {
+    Flight *generated_flight = calloc(sizeof(Flight), 1);
+    if (!generated_flight)
+      exit(EXIT_FAILURE);
+    generated_flight->number = current_flight_id++;
+    generate_random_name(generated_flight->origin, 50);
+    generate_random_name(generated_flight->destiny, 50);
+    generated_flight->seats = random_int(0, 500);
+    generated_flight->date.year = random_int(1900, 2100);
+    generated_flight->date.month = random_int(1, 12);
+    generated_flight->date.day = random_int(1, 31);
+    generated_flight->time = random_int(0, 2300);
+    generated_flight->left = NULL;
+    generated_flight->right = NULL;
+    append_on_list(generated_flight);
+  }
+
+  root = generate_flights_tree(flight_list, 0, flight_list_length - 1);
+  return root;
+}
 /* ==================== OPERATION FUNCTIONS ==================== */
 
 int main(void)
 {
+  srand(time(NULL));
   Flight *root = NULL;
   int option = -1;
 
@@ -563,6 +611,9 @@ int main(void)
       break;
     case 6:
       list_flights_with_disponible_seats_helper(root);
+      break;
+    case 7:
+      root = generate_random_flights(root);
       break;
     default:
       puts("Digite uma opcao valida!\n");
