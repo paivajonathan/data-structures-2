@@ -331,8 +331,10 @@ int count_flights(Flight *root)
   int total_count = 0;
 
   total_count += count_flights(root->left);
+  
   print_flight(root);
   total_count++;
+  
   total_count += count_flights(root->right);
 
   return total_count;
@@ -552,8 +554,8 @@ void count_flights_helper(Flight *root)
     return;
   }
 
-  int registered_flights = count_flights(root);
-  printf("\nExiste(m) %d voo(s) registrado(s).\n", registered_flights);
+  int disponible_flights = count_flights(root);
+  printf("\nExiste(m) %d voo(s) disponivel(is).\n", disponible_flights);
 }
 
 int compare_flights_by_datetime(const void *a, const void *b)
