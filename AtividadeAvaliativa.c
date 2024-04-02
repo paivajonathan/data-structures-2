@@ -40,6 +40,11 @@ void print_menu(void)
   puts("5: Visualizar o numero total de voos disponiveis");
   puts("6: Listar voos com assentos disponiveis ordenados por data e hora");
 }
+
+int max_value(int a, int b)
+{
+  return (a >= b) ? a : b;
+}
 /* ==================== UTILS ==================== */
 
 /* ==================== STRUCTS ==================== */
@@ -136,11 +141,6 @@ Flight *generate_flights_tree(Flight **values, int start, int end)
   return root;
 }
 
-int max_value(int a, int b)
-{
-  return (a >= b) ? a : b;
-}
-
 int get_tree_height(Flight *node)
 {
   if (node == NULL)
@@ -184,6 +184,131 @@ Flight *insert_flight(Flight *root, Flight *new_flight)
   return root;
 }
 
+Flight *delete_flight(Flight *root, int number)
+{
+  if (!root)
+    return root;
+
+  if (number < root->number)
+    root->left = delete_flight(root->left, number);
+  else if (number > root->number)
+    root->right = delete_flight(root->right, number);
+  else
+  {
+    // If it doesn't have any children, free its memory and return NULL to who
+    // called.
+    if (!root->left && !root->right)
+    {
+      free(root);
+      return NULL;
+    }
+
+    // If it doesn't have only the left child, return the right child to who
+    // called, after freeing its memory
+    if (!root->left)
+    {
+      Flight *temp = root->right;
+      free(root);
+      return temp;
+    }
+
+    // If it doesn't have only the right child, return the left child to who
+    // called
+    if (!root->right)
+    {
+      Flight *temp = root->left;
+      free(root);
+      return temp;
+    }
+
+    // And if it has the two possible children, find the minimum successor,
+    // that the current root will receive its number, and the node that had that
+    // number is deleted. That node will always be a leaf one. Ex.: Root = 4,
+    // Minimum Successor = 5.
+    Flight *minimum_successor = root->right;
+    while (minimum_successor->left)
+      minimum_successor = minimum_successor->left;
+    root->number = minimum_successor->number;
+    root->right = delete_flight(root->right, minimum_successor->number);
+  }
+
+  return root;
+}
+
+void print_flight_tree(Flight *root, int level)
+{
+  if (!root)
+    return;
+  print_flight_tree(root->right, level + 4);
+  printf("%*c%d\n", level, ' ', root->number);
+  print_flight(root);
+  print_flight_tree(root->left, level + 4);
+}
+
+void destroy_flight_tree(Flight *root)
+{
+  if (!root)
+    return;
+  destroy_flight_tree(root->left);
+  destroy_flight_tree(root->right);
+  free(root);
+}
+/* ==================== TREE ==================== */
+
+/* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
+
+void search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
+{
+  if (!root)
+    return;
+  search_flights_by_data(root->right, origin, destiny, date);
+  if (
+      strcmp(root->origin, origin) == 0 &&
+      strcmp(root->destiny, destiny) == 0 &&
+      root->date.year == date.year &&
+      root->date.month == date.month &&
+      root->date.day == date.day)
+    print_flight(root);
+  search_flights_by_data(root->left, origin, destiny, date);
+}
+
+void list_flight_by_max_seats(Flight *root)
+{
+  if (!root)
+    return;
+  list_flight_by_max_seats(root->right);
+  if (root->seats < 10)
+    print_flight(root);
+  list_flight_by_max_seats(root->left);
+}
+
+int count_flights(Flight *root)
+{
+  if (!root)
+    return 0;
+
+  int total_count = 0;
+
+  total_count += count_flights(root->left);
+  print_flight(root);
+  total_count++;
+  total_count += count_flights(root->right);
+
+  return total_count;
+}
+
+void list_flights_with_disponible_seats(Flight *root)
+{
+  if (!root)
+    return;
+  list_flights_with_disponible_seats(root->left);
+  if (root->seats)
+    append_on_list(root);
+  list_flights_with_disponible_seats(root->right);
+}
+/* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
+
+/* ==================== OPERATION FUNCTIONS ==================== */
 Flight *insert_flight_helper(Flight *root)
 {
   Flight *new_flight = calloc(sizeof(Flight), 1);
@@ -268,57 +393,6 @@ Flight *insert_flight_helper(Flight *root)
   return root;
 }
 
-Flight *delete_flight(Flight *root, int number)
-{
-  if (!root)
-    return root;
-
-  if (number < root->number)
-    root->left = delete_flight(root->left, number);
-  else if (number > root->number)
-    root->right = delete_flight(root->right, number);
-  else
-  {
-    // If it doesn't have any children, free its memory and return NULL to who
-    // called.
-    if (!root->left && !root->right)
-    {
-      free(root);
-      return NULL;
-    }
-
-    // If it doesn't have only the left child, return the right child to who
-    // called, after freeing its memory
-    if (!root->left)
-    {
-      Flight *temp = root->right;
-      free(root);
-      return temp;
-    }
-
-    // If it doesn't have only the right child, return the left child to who
-    // called
-    if (!root->right)
-    {
-      Flight *temp = root->left;
-      free(root);
-      return temp;
-    }
-
-    // And if it has the two possible children, find the minimum successor,
-    // that the current root will receive its number, and the node that had that
-    // number is deleted. That node will always be a leaf one. Ex.: Root = 4,
-    // Minimum Successor = 5.
-    Flight *minimum_successor = root->right;
-    while (minimum_successor->left)
-      minimum_successor = minimum_successor->left;
-    root->number = minimum_successor->number;
-    root->right = delete_flight(root->right, minimum_successor->number);
-  }
-
-  return root;
-}
-
 Flight *delete_flight_helper(Flight *root)
 {
   if (!root)
@@ -331,28 +405,16 @@ Flight *delete_flight_helper(Flight *root)
 
   do
   {
-    printf("Digite o numero do voo a ser excluído:\n");
+    puts("Digite o numero do voo a ser excluído:");
     scanf("%d", &number);
     clear_buffer();
-  } while (number <= 0);
+    if (number > 0)
+      break;
+    puts("Numero invalido!");
+  } while (true);
 
   root = delete_flight(root, number);
   return root;
-}
-
-void search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
-{
-  if (!root)
-    return;
-  search_flights_by_data(root->right, origin, destiny, date);
-  if (
-      strcmp(root->origin, origin) == 0 &&
-      strcmp(root->destiny, destiny) == 0 &&
-      root->date.year == date.year &&
-      root->date.month == date.month &&
-      root->date.day == date.day)
-    print_flight(root);
-  search_flights_by_data(root->left, origin, destiny, date);
 }
 
 void search_flights_by_data_helper(Flight *root)
@@ -408,16 +470,6 @@ void search_flights_by_data_helper(Flight *root)
   search_flights_by_data(root, origin, destiny, date);
 }
 
-void list_flight_by_max_seats(Flight *root)
-{
-  if (!root)
-    return;
-  list_flight_by_max_seats(root->right);
-  if (root->seats < 10)
-    print_flight(root);
-  list_flight_by_max_seats(root->left);
-}
-
 void list_flights_by_max_seats_helper(Flight *root)
 {
   if (!root)
@@ -430,21 +482,6 @@ void list_flights_by_max_seats_helper(Flight *root)
   list_flight_by_max_seats(root);
 }
 
-int count_flights(Flight *root)
-{
-  if (!root)
-    return 0;
-
-  int total_count = 0;
-
-  total_count += count_flights(root->left);
-  print_flight(root);
-  total_count++;
-  total_count += count_flights(root->right);
-
-  return total_count;
-}
-
 void count_flights_helper(Flight *root)
 {
   if (!root)
@@ -455,16 +492,6 @@ void count_flights_helper(Flight *root)
 
   int registered_flights = count_flights(root);
   printf("Existe(m) %d voo(s) registrado(s).\n", registered_flights);
-}
-
-void list_flights_with_disponible_seats(Flight *root)
-{
-  if (!root)
-    return;
-  list_flights_with_disponible_seats(root->left);
-  if (root->seats)
-    append_on_list(root);
-  list_flights_with_disponible_seats(root->right);
 }
 
 int compare_flights_by_datetime(const void *a, const void *b)
@@ -496,31 +523,12 @@ void list_flights_with_disponible_seats_helper(Flight *root)
   qsort(flight_list, flight_list_length, sizeof(Flight *), compare_flights_by_datetime);
   print_list();
 }
-
-void print_flight_tree(Flight *root, int level)
-{
-  if (!root)
-    return;
-  print_flight_tree(root->right, level + 4);
-  printf("%*c%d\n", level, ' ', root->number);
-  print_flight(root);
-  print_flight_tree(root->left, level + 4);
-}
-
-void destroy_flight_tree(Flight *root)
-{
-  if (!root)
-    return;
-  destroy_flight_tree(root->left);
-  destroy_flight_tree(root->right);
-  free(root);
-}
-/* ==================== TREE ==================== */
+/* ==================== OPERATION FUNCTIONS ==================== */
 
 int main(void)
 {
   Flight *root = NULL;
-  int option = 0;
+  int option = -1;
 
   do
   {
@@ -528,6 +536,12 @@ int main(void)
     printf("Digite uma opcao:\n");
     scanf("%d", &option);
     clear_buffer();
+
+    if (option == 0)
+    {
+      puts("Saindo do programa...");
+      break;
+    }
 
     switch (option)
     {
@@ -550,10 +564,11 @@ int main(void)
       list_flights_with_disponible_seats_helper(root);
       break;
     default:
-      puts("Saindo do programa...\n");
+      puts("Digite uma opcao valida!\n");
       break;
     }
-  } while (option != 0);
+    option = -1;
+  } while (true);
 
   destroy_list();
   destroy_flight_tree(root);
