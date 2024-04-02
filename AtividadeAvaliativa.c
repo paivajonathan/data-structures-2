@@ -78,10 +78,12 @@ int flight_list_length = 0;
 /* ==================== LIST ==================== */
 void append_on_list(Flight *flight)
 {
+  // List isn't created yet
   if (!flight_list)
   {
     flight_list = calloc(sizeof(Flight *), 1);
   }
+  // List already has values
   else
   {
     flight_list = realloc(flight_list, sizeof(Flight *) * (flight_list_length + 1));
@@ -94,16 +96,8 @@ void append_on_list(Flight *flight)
     exit(EXIT_FAILURE);
   }
 
+  // Append on last position
   flight_list[flight_list_length++] = flight;
-}
-
-void append_flights_on_list(Flight *root)
-{
-  if (!root)
-    return;
-  append_flights_on_list(root->left);
-  append_on_list(root);
-  append_flights_on_list(root->right);
 }
 
 void print_flight(Flight *root, int spaces)
@@ -139,6 +133,15 @@ void destroy_list(void)
 /* ==================== LIST ==================== */
 
 /* ==================== TREE ==================== */
+void append_flights_on_list(Flight *root)
+{
+  if (!root)
+    return;
+  append_flights_on_list(root->left);
+  append_on_list(root);
+  append_flights_on_list(root->right);
+}
+
 Flight *generate_flights_tree(Flight **values, int start, int end)
 {
   if (start > end)
@@ -148,32 +151,6 @@ Flight *generate_flights_tree(Flight **values, int start, int end)
   root->left = generate_flights_tree(values, start, mid - 1);
   root->right = generate_flights_tree(values, mid + 1, end);
   return root;
-}
-
-int get_tree_height(Flight *node)
-{
-  if (node == NULL)
-    return 0;
-
-  return 1 + max_value(get_tree_height(node->left), get_tree_height(node->right));
-}
-
-bool is_tree_balanced(Flight *root)
-{
-  int left_height;
-  int right_height;
-
-  if (root == NULL)
-    return true;
-
-  left_height = get_tree_height(root->left);
-  right_height = get_tree_height(root->right);
-
-  if (abs(left_height - right_height) <= 1 && is_tree_balanced(root->left) &&
-      is_tree_balanced(root->right))
-    return true;
-
-  return false;
 }
 
 Flight *search_flight(Flight *root, int number)
@@ -215,8 +192,10 @@ Flight *delete_flight(Flight *root, int number)
 
   if (number < root->number)
     root->left = delete_flight(root->left, number);
+  
   else if (number > root->number)
     root->right = delete_flight(root->right, number);
+  
   else
   {
     // If it doesn't have any children, free its memory and return NULL to who
@@ -257,6 +236,52 @@ Flight *delete_flight(Flight *root, int number)
   }
 
   return root;
+}
+
+int get_tree_height(Flight *flight)
+{
+  if (!flight)
+    return 0;
+
+  return 1 + max_value(get_tree_height(flight->left), get_tree_height(flight->right));
+}
+
+bool is_tree_balanced(Flight *root)
+{
+  int left_height;
+  int right_height;
+
+  if (!root)
+    return true;
+
+  left_height = get_tree_height(root->left);
+  right_height = get_tree_height(root->right);
+
+  if (abs(left_height - right_height) <= 1 && is_tree_balanced(root->left) &&
+      is_tree_balanced(root->right))
+    return true;
+
+  return false;
+}
+
+int compare_flights_by_datetime(const void *a, const void *b)
+{
+  Flight *flight_a = *(Flight **)a;
+  Flight *flight_b = *(Flight **)b;
+
+  if (flight_a->date.year != flight_b->date.year)
+    return flight_a->date.year - flight_b->date.year;
+
+  if (flight_a->date.month != flight_b->date.month)
+    return flight_a->date.month - flight_b->date.month;
+
+  if (flight_a->date.day != flight_b->date.day)
+    return flight_a->date.day - flight_b->date.day;
+
+  if (flight_a->time.hours != flight_b->time.hours)
+    return flight_a->time.hours != flight_b->time.hours;
+
+  return flight_a->time.minutes != flight_b->time.minutes;
 }
 
 void print_flight_tree(Flight *root, int level)
@@ -498,7 +523,7 @@ void search_flights_by_data_helper(Flight *root)
 {
   if (!root)
   {
-    puts("Nao ha voos disponiveis!");
+    puts("\nNao ha voos disponiveis!");
     return;
   }
 
@@ -546,6 +571,7 @@ void search_flights_by_data_helper(Flight *root)
 
   puts("\nListando todos os voos que possuem esses dados:");
   int quantity_found = search_flights_by_data(root, origin, destiny, date);
+  
   if (!quantity_found)
     puts("Nenhum foi encontrado.");
 }
@@ -577,26 +603,6 @@ void count_flights_helper(Flight *root)
   printf("\nExiste(m) %d voo(s) disponivel(is).\n", disponible_flights);
 }
 
-int compare_flights_by_datetime(const void *a, const void *b)
-{
-  Flight *flight_a = *(Flight **)a;
-  Flight *flight_b = *(Flight **)b;
-
-  if (flight_a->date.year != flight_b->date.year)
-    return flight_a->date.year - flight_b->date.year;
-
-  if (flight_a->date.month != flight_b->date.month)
-    return flight_a->date.month - flight_b->date.month;
-
-  if (flight_a->date.day != flight_b->date.day)
-    return flight_a->date.day - flight_b->date.day;
-
-  if (flight_a->time.hours != flight_b->time.hours)
-    return flight_a->time.hours != flight_b->time.hours;
-
-  return flight_a->time.minutes != flight_b->time.minutes;
-}
-
 void list_flights_with_disponible_seats_helper(Flight *root)
 {
   if (!root)
@@ -622,7 +628,7 @@ void list_flights_with_disponible_seats_helper(Flight *root)
 
 Flight *generate_random_flights(Flight *root)
 {
-  if (count_flights(root) != 0)
+  if (count_flights(root))
   {
     puts("\nJa existem voos presentes.");
     return root;
@@ -659,9 +665,10 @@ void print_flight_tree_helper(Flight *root)
 {
   if (!root)
   {
-    puts("Nao ha voos disponiveis!");
+    puts("\nNao ha voos disponiveis!");
     return;
   }
+
   puts("Mostrando todos os voos...");
   print_flight_tree(root, 0);
 }
