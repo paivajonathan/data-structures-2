@@ -38,6 +38,7 @@ void print_menu(void)
   puts("3: Pesquisar voos com base na origem, destino e data");
   puts("4: Listar voos com menos de 10 assentos disponiveis");
   puts("5: Visualizar o numero total de voos disponiveis");
+  puts("6: Listar voos com assentos disponiveis ordenados por data e hora");
 }
 /* ==================== UTILS ==================== */
 
@@ -46,9 +47,9 @@ typedef struct Flight
   int number;
   char origin[50];
   char destiny[50];
-  int dispon_seats;
+  int seats;
   int time;
-  time_t date;
+  int date;
   struct Flight *right;
   struct Flight *left;
 } Flight;
@@ -61,12 +62,19 @@ void append_on_list(Flight *flight)
 {
   if (!flight_list)
   {
-    flight_list = calloc(sizeof(Flight), 1);
+    flight_list = calloc(sizeof(Flight *), 1);
   }
   else
   {
-    flight_list = realloc(flight_list, sizeof(Flight) * 1);
+    flight_list = realloc(flight_list, sizeof(Flight *) * (flight_list_length + 1));
   }
+
+  if (flight_list == NULL)
+  {
+    fprintf(stderr, "Memory allocation failed\n");
+    exit(EXIT_FAILURE);
+  }
+
   flight_list[flight_list_length++] = flight;
 }
 
@@ -79,16 +87,29 @@ void append_flights_on_list(Flight *root)
   append_flights_on_list(root->right);
 }
 
+void print_flight(Flight *root)
+{
+  if (!root)
+    return;
+  printf("\nNumero: %d\n", root->number);
+  printf("Origem: %s\n", root->origin);
+  printf("Destino: %s\n", root->destiny);
+  printf("Assentos disponiveis: %d\n", root->seats);
+  printf("Data %d\n", root->date);
+  printf("Hora: %d\n", root->time);
+}
+
 void print_list(void)
 {
   for (int i = 0; i < flight_list_length; i++)
-    printf("Number: %d", flight_list[i]->number);
+    print_flight(flight_list[i]);
 }
 
 void destroy_list(void)
 {
   if (!flight_list)
     return;
+  flight_list_length = 0;
   free(flight_list);
   flight_list = NULL;
 }
@@ -106,7 +127,6 @@ Flight *generate_flights_tree(Flight **values, int start, int end)
   return root;
 }
 
-/* Verificar se tá balanceada */
 int max_value(int a, int b)
 {
   return (a >= b) ? a : b;
@@ -137,7 +157,6 @@ bool is_balanced(Flight *root)
 
   return false;
 }
-/* Verificar se tá balanceada */
 
 Flight *insert_flight(Flight *root, Flight *new_flight)
 {
@@ -158,8 +177,9 @@ Flight *insert_flight(Flight *root, Flight *new_flight)
 
 Flight *insert_flight_helper(Flight *root)
 {
-  Flight *new_flight = calloc(sizeof(Flight), 1);
+  clear_screen();
 
+  Flight *new_flight = calloc(sizeof(Flight), 1);
   if (!new_flight)
     exit(1);
 
@@ -175,16 +195,19 @@ Flight *insert_flight_helper(Flight *root)
   do
   {
     printf("Digite a quantidade de assentos disponiveis:\n");
-    scanf("%d", &(new_flight->dispon_seats));
-    if (new_flight->dispon_seats >= 0) break;
+    scanf("%d", &(new_flight->seats));
+    if (new_flight->seats >= 0)
+      break;
     puts("Quantidade invalida!");
   } while (true);
 
   printf("Digite a data do voo:\n");
-  scanf("%ld", &(new_flight->date));
+  scanf("%d", &(new_flight->date));
+  clear_buffer();
 
-  printf("Digite o horário do voo:\n");
+  printf("Digite o horario do voo:\n");
   scanf("%d", &(new_flight->time));
+  clear_buffer();
 
   new_flight->left = NULL;
   new_flight->right = NULL;
@@ -273,19 +296,7 @@ Flight *delete_flight_helper(Flight *root)
   return root;
 }
 
-void print_flight(Flight *root)
-{
-  if (!root)
-    return;
-  printf("Número: %d\n", root->number);
-  printf("Origem: %s\n", root->origin);
-  printf("Destino: %s\n", root->destiny);
-  printf("Assentos disponiveis: %d\n", root->dispon_seats);
-  printf("Hora: %d\n", root->time);
-  printf("Data %ld\n\n", root->date);
-}
-
-void search_flights_by_data(Flight *root, char *origin, char *destiny, time_t date)
+void search_flights_by_data(Flight *root, char *origin, char *destiny, int date)
 {
   if (!root)
     return;
@@ -306,7 +317,7 @@ void search_flights_by_data_helper(Flight *root)
 
   char origin[50];
   char destiny[50];
-  time_t date;
+  int date;
 
   printf("Digite a origem do voo:\n");
   scanf("%50s", origin);
@@ -317,23 +328,23 @@ void search_flights_by_data_helper(Flight *root)
   clear_buffer();
 
   printf("Digite a data da viagem:\n");
-  scanf("%ld", &date);
+  scanf("%d", &date);
   clear_buffer();
 
   search_flights_by_data(root, origin, destiny, date);
 }
 
-void list_flights_by_dispon_seats(Flight *root)
+void list_flight_by_max_seats(Flight *root)
 {
   if (!root)
     return;
-  list_flights_by_dispon_seats(root->right);
-  if (root->dispon_seats < 10)
+  list_flight_by_max_seats(root->right);
+  if (root->seats < 10)
     print_flight(root);
-  list_flights_by_dispon_seats(root->left);
+  list_flight_by_max_seats(root->left);
 }
 
-void list_flights_by_dispon_seats_helper(Flight *root)
+void list_flights_by_max_seats_helper(Flight *root)
 {
   if (!root)
   {
@@ -342,7 +353,7 @@ void list_flights_by_dispon_seats_helper(Flight *root)
   }
 
   puts("Listando todos os voos com menos de 10 assentos disponiveis:\n");
-  list_flights_by_dispon_seats(root);
+  list_flight_by_max_seats(root);
 }
 
 int count_flights(Flight *root)
@@ -372,6 +383,40 @@ void count_flights_helper(Flight *root)
   printf("Existe(m) %d voo(s) registrado(s).\n", registered_flights);
 }
 
+void list_flights_with_disponible_seats(Flight *root)
+{
+  if (!root)
+    return;
+  list_flights_with_disponible_seats(root->left);
+  if (root->seats)
+    append_on_list(root);
+  list_flights_with_disponible_seats(root->right);
+}
+
+int compare_flights(const void *a, const void *b)
+{
+  Flight *flight_a = *(Flight **)a;
+  Flight *flight_b = *(Flight **)b;
+
+  if (flight_a->date != flight_b->date)
+    return flight_a->date - flight_b->date;
+
+  return flight_a->time - flight_b->time;
+}
+
+void list_flights_with_disponible_seats_helper(Flight *root)
+{
+  if (!root)
+  {
+    puts("Nao ha voos disponiveis!");
+    return;
+  }
+  destroy_list();
+  list_flights_with_disponible_seats(root);
+  qsort(flight_list, flight_list_length, sizeof(Flight *), compare_flights);
+  print_list();
+}
+
 void print_flight_tree(Flight *root, int level)
 {
   if (!root)
@@ -399,6 +444,7 @@ int main(void)
 
   do
   {
+    clear_screen();
     print_menu();
     printf("Digite uma opcao:\n");
     scanf("%d", &option);
@@ -416,10 +462,13 @@ int main(void)
       search_flights_by_data_helper(root);
       break;
     case 4:
-      list_flights_by_dispon_seats_helper(root);
+      list_flights_by_max_seats_helper(root);
       break;
     case 5:
       count_flights_helper(root);
+      break;
+    case 6:
+      list_flights_with_disponible_seats_helper(root);
       break;
     default:
       puts("Saindo do programa...\n");
