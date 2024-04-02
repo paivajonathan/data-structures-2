@@ -394,17 +394,17 @@ Flight *insert_flight_helper(Flight *root)
 
   new_flight->number = current_flight_id;
 
-  printf("Digite uma origem para o voo:\n");
+  printf("\nDigite uma origem para o voo:\n");
   scanf(" %50[^\n]", new_flight->origin);
   clear_buffer();
 
-  printf("Digite um destino para o voo:\n");
+  printf("\nDigite um destino para o voo:\n");
   scanf(" %50[^\n]", new_flight->destiny);
   clear_buffer();
 
   do
   {
-    printf("Digite a quantidade de assentos disponiveis:\n");
+    printf("\nDigite a quantidade de assentos disponiveis:\n");
     scanf("%d", &(new_flight->seats));
     clear_buffer();
     if (new_flight->seats >= 0)
@@ -414,7 +414,7 @@ Flight *insert_flight_helper(Flight *root)
 
   do
   {
-    printf("Digite o ano do voo:\n");
+    printf("\nDigite o ano do voo:\n");
     scanf("%d", &(new_flight->date.year));
     clear_buffer();
     if (new_flight->date.year > 1900)
@@ -424,7 +424,7 @@ Flight *insert_flight_helper(Flight *root)
 
   do
   {
-    printf("Digite o mes do voo:\n");
+    printf("\nDigite o mes do voo:\n");
     scanf("%d", &(new_flight->date.month));
     clear_buffer();
     if (new_flight->date.month >= 1 && new_flight->date.month <= 12)
@@ -434,7 +434,7 @@ Flight *insert_flight_helper(Flight *root)
 
   do
   {
-    printf("Digite o dia do voo:\n");
+    printf("\nDigite o dia do voo:\n");
     scanf("%d", &(new_flight->date.day));
     clear_buffer();
     if (new_flight->date.day >= 1 && new_flight->date.day <= 31)
@@ -444,7 +444,7 @@ Flight *insert_flight_helper(Flight *root)
 
   do
   {
-    puts("Digite o horario do voo:");
+    puts("\nDigite o horario do voo:");
     scanf("%d", &(new_flight->time.hours));
     clear_buffer();
     if (new_flight->time.hours >= 0 && new_flight->time.hours < 23)
@@ -454,7 +454,7 @@ Flight *insert_flight_helper(Flight *root)
 
   do
   {
-    puts("Digite os minutos:");
+    puts("\nDigite os minutos:");
     scanf("%d", &(new_flight->time.minutes));
     clear_buffer();
     if (new_flight->time.minutes >= 0 && new_flight->time.minutes <= 59)
@@ -530,17 +530,17 @@ void search_flights_by_data_helper(Flight *root)
   char destiny[50];
   Date date;
 
-  printf("Digite a origem do voo:\n");
-  scanf("%50s", origin);
+  printf("\nDigite a origem do voo:\n");
+  scanf(" %50[^\n]", origin);
   clear_buffer();
 
-  printf("Digite o destino:\n");
-  scanf("%50s", destiny);
+  printf("\nDigite o destino:\n");
+  scanf(" %50[^\n]", destiny);
   clear_buffer();
 
   do
   {
-    printf("Digite o ano do voo:\n");
+    printf("\nDigite o ano do voo:\n");
     scanf("%d", &(date.year));
     clear_buffer();
     if (date.year > 1900)
@@ -550,7 +550,7 @@ void search_flights_by_data_helper(Flight *root)
 
   do
   {
-    printf("Digite o mes do voo:\n");
+    printf("\nDigite o mes do voo:\n");
     scanf("%d", &(date.month));
     clear_buffer();
     if (date.month >= 1 && date.month <= 12)
@@ -560,7 +560,7 @@ void search_flights_by_data_helper(Flight *root)
 
   do
   {
-    printf("Digite o dia do voo:\n");
+    printf("\nDigite o dia do voo:\n");
     scanf("%d", &(date.day));
     clear_buffer();
     if (date.day >= 1 && date.day <= 31)
