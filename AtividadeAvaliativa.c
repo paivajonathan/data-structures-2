@@ -4,31 +4,12 @@
 #include <string.h>
 #include <time.h>
 
-// #if defined(_WIN32) || defined(_WIN64)
-// #define CLEAR_COMMAND "cls"
-// #elif defined(__linux__) || defined(__APPLE__)
-// #define CLEAR_COMMAND "clear"
-// #else
-// #error "Unsupported operating system"
-// #endif
-
 /* ==================== UTILS ==================== */
-// void clear_screen(void)
-// {
-//   system(CLEAR_COMMAND);
-// }
-
 void clear_buffer(void)
 {
   int c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
-}
-
-void wait_user(void)
-{
-  puts("Pressione ENTER para continuar...");
-  clear_buffer();
 }
 
 void print_menu(void)
@@ -58,14 +39,20 @@ typedef struct Date
   int day;
 } Date;
 
+typedef struct Time
+{
+  int hours;
+  int minutes;
+} Time;
+
 typedef struct Flight
 {
   int number;
   char origin[51];
   char destiny[51];
   int seats;
-  int time;
   Date date;
+  Time time;
   struct Flight *right;
   struct Flight *left;
 } Flight;
@@ -115,7 +102,7 @@ void print_flight(Flight *root)
   printf("Destino: %s\n", root->destiny);
   printf("Assentos disponiveis: %d\n", root->seats);
   printf("Data: %02d/%02d/%04d\n", root->date.day, root->date.month, root->date.year);
-  printf("Hora: %d\n", root->time);
+  printf("Hora: %02d:%02d\n", root->time.hours, root->time.minutes);
 }
 
 void print_flight_spaces(Flight *root, int spaces)
@@ -127,7 +114,7 @@ void print_flight_spaces(Flight *root, int spaces)
   printf("%*cDestino: %s\n", spaces, ' ', root->destiny);
   printf("%*cAssentos disponiveis: %d\n", spaces, ' ', root->seats);
   printf("%*cData: %02d/%02d/%04d\n", spaces, ' ', root->date.day, root->date.month, root->date.year);
-  printf("%*cHora: %d\n", spaces, ' ', root->time);
+  printf("%*cHora: %02d:%02d\n", spaces, ' ', root->time.hours, root->time.minutes);
 }
 
 void print_list(void)
@@ -429,9 +416,25 @@ Flight *insert_flight_helper(Flight *root)
     puts("Dia invalido!");
   } while (true);
 
-  printf("Digite o horario do voo:\n");
-  scanf("%d", &(new_flight->time));
-  clear_buffer();
+  do
+  {
+    puts("Digite o horario do voo:");
+    scanf("%d", &(new_flight->time.hours));
+    clear_buffer();
+    if (new_flight->time.hours >= 0 && new_flight->time.hours < 23)
+      break;
+    puts("Horario invalido");
+  } while (true);
+
+  do
+  {
+    puts("Digite os minutos:");
+    scanf("%d", &(new_flight->time.minutes));
+    clear_buffer();
+    if (new_flight->time.minutes >= 0 && new_flight->time.minutes < 59)
+      break;
+    puts("Minutos invalidos");
+  } while (true);
 
   new_flight->left = NULL;
   new_flight->right = NULL;
@@ -583,7 +586,10 @@ int compare_flights_by_datetime(const void *a, const void *b)
   if (flight_a->date.day != flight_b->date.day)
     return flight_a->date.day - flight_b->date.day;
 
-  return flight_a->time - flight_b->time;
+  if (flight_a->time.hours != flight_b->time.hours)
+    return flight_a->time.hours != flight_b->time.hours;
+  
+  return flight_a->time.minutes != flight_b->time.minutes;
 }
 
 void list_flights_with_disponible_seats_helper(Flight *root)
@@ -645,7 +651,8 @@ Flight *generate_random_flights(Flight *root)
     generated_flight->date.year = generate_random_integer(1900, 2100);
     generated_flight->date.month = generate_random_integer(1, 12);
     generated_flight->date.day = generate_random_integer(1, 31);
-    generated_flight->time = generate_random_integer(0, 2300);
+    generated_flight->time.hours = generate_random_integer(0, 23);
+    generated_flight->time.minutes = generate_random_integer(0, 59);
     generated_flight->left = NULL;
     generated_flight->right = NULL;
     append_on_list(generated_flight);
