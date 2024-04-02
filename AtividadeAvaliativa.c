@@ -40,57 +40,9 @@ void print_menu(void)
   puts("5: Visualizar o numero total de voos disponiveis");
   puts("6: Listar voos com assentos disponiveis ordenados por data e hora");
 }
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-// Function to parse date string and populate a struct tm object
-int parse_date(const char *date_string, struct tm *tm_struct)
-{
-  char *token;
-
-  char *date_copy = malloc(strlen(date_string) + 1);
-  if (date_copy == NULL)
-    return 0;
-  strcpy(date_copy, date_string);
-
-  // Extract day
-  token = strtok(date_copy, "/");
-  if (token == NULL)
-    return 0; // Invalid date string
-  int day = atoi(token);
-  if (day < 1 || day > 31)
-    return 0; // Day out of range
-  tm_struct->tm_mday = day;
-
-  // Extract month
-  token = strtok(NULL, "/");
-  if (token == NULL)
-    return 0; // Invalid date string
-  int month = atoi(token);
-  if (month < 1 || month > 12)
-    return 0;                    // Month out of range
-  tm_struct->tm_mon = month - 1; // tm_mon is 0-based
-
-  // Extract year
-  token = strtok(NULL, "/");
-  if (token == NULL)
-    return 0; // Invalid date string
-  int year = atoi(token);
-  if (year < 1900)                  // Assuming years before 1900 are invalid for this application
-    return 0;                       // Year out of range
-  tm_struct->tm_year = year - 1900; // tm_year is years since 1900
-
-  // Free dynamically allocated memory
-  free(date_copy);
-
-  return 1; // Parsing successful
-}
-
 /* ==================== UTILS ==================== */
 
+/* ==================== STRUCTS ==================== */
 typedef struct Date
 {
   int year;
@@ -109,6 +61,7 @@ typedef struct Flight
   struct Flight *right;
   struct Flight *left;
 } Flight;
+/* ==================== STRUCTS ==================== */
 
 /* ==================== LIST ==================== */
 Flight **flight_list = NULL;
@@ -188,15 +141,15 @@ int max_value(int a, int b)
   return (a >= b) ? a : b;
 }
 
-int height(Flight *node)
+int get_tree_height(Flight *node)
 {
   if (node == NULL)
     return 0;
 
-  return 1 + max_value(height(node->left), height(node->right));
+  return 1 + max_value(get_tree_height(node->left), get_tree_height(node->right));
 }
 
-bool is_balanced(Flight *root)
+bool is_tree_balanced(Flight *root)
 {
   int left_height;
   int right_height;
@@ -204,11 +157,11 @@ bool is_balanced(Flight *root)
   if (root == NULL)
     return true;
 
-  left_height = height(root->left);
-  right_height = height(root->right);
+  left_height = get_tree_height(root->left);
+  right_height = get_tree_height(root->right);
 
-  if (abs(left_height - right_height) <= 1 && is_balanced(root->left) &&
-      is_balanced(root->right))
+  if (abs(left_height - right_height) <= 1 && is_tree_balanced(root->left) &&
+      is_tree_balanced(root->right))
     return true;
 
   return false;
@@ -304,7 +257,7 @@ Flight *insert_flight_helper(Flight *root)
 
   root = insert_flight(root, new_flight);
 
-  if (!is_balanced(root))
+  if (!is_tree_balanced(root))
   {
     puts("Nao esta balanceada");
     destroy_list();
