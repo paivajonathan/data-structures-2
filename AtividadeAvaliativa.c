@@ -25,7 +25,7 @@ void print_menu(void)
   puts("0: Sair do programa\n");
 }
 
-int max_value(int a, int b)
+int get_max_value(int a, int b)
 {
   return (a >= b) ? a : b;
 }
@@ -242,7 +242,7 @@ int get_tree_height(Flight *flight)
   if (!flight)
     return 0;
 
-  return 1 + max_value(get_tree_height(flight->left), get_tree_height(flight->right));
+  return 1 + get_max_value(get_tree_height(flight->left), get_tree_height(flight->right));
 }
 
 bool is_tree_balanced(Flight *root)
