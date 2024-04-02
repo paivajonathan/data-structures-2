@@ -4,19 +4,19 @@
 #include <string.h>
 #include <time.h>
 
-#if defined(_WIN32) || defined(_WIN64)
-#define CLEAR_COMMAND "cls"
-#elif defined(__linux__) || defined(__APPLE__)
-#define CLEAR_COMMAND "clear"
-#else
-#error "Unsupported operating system"
-#endif
+// #if defined(_WIN32) || defined(_WIN64)
+// #define CLEAR_COMMAND "cls"
+// #elif defined(__linux__) || defined(__APPLE__)
+// #define CLEAR_COMMAND "clear"
+// #else
+// #error "Unsupported operating system"
+// #endif
 
 /* ==================== UTILS ==================== */
-void clear_screen(void)
-{
-  system(CLEAR_COMMAND);
-}
+// void clear_screen(void)
+// {
+//   system(CLEAR_COMMAND);
+// }
 
 void clear_buffer(void)
 {
@@ -47,7 +47,7 @@ int max_value(int a, int b)
 }
 /* ==================== UTILS ==================== */
 
-/* ==================== STRUCTS ==================== */
+/* ==================== STRUCTURES ==================== */
 typedef struct Date
 {
   int year;
@@ -66,12 +66,14 @@ typedef struct Flight
   struct Flight *right;
   struct Flight *left;
 } Flight;
-/* ==================== STRUCTS ==================== */
 
-/* ==================== LIST ==================== */
+int flight_id = 1;
+
 Flight **flight_list = NULL;
 int flight_list_length = 0;
+/* ==================== STRUCTURES ==================== */
 
+/* ==================== LIST ==================== */
 void append_on_list(Flight *flight)
 {
   if (!flight_list)
@@ -172,6 +174,7 @@ Flight *insert_flight(Flight *root, Flight *new_flight)
   if (!root)
   {
     root = new_flight;
+    flight_id++;
     return root;
   }
 
@@ -256,7 +259,6 @@ void destroy_flight_tree(Flight *root)
 /* ==================== TREE ==================== */
 
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
-
 void search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
 {
   if (!root)
@@ -315,15 +317,7 @@ Flight *insert_flight_helper(Flight *root)
   if (!new_flight)
     exit(1);
 
-  do
-  {
-    printf("Digite um numero para o voo:\n");
-    scanf("%d", &(new_flight->number));
-    clear_buffer();
-    if (new_flight->number > 0)
-      break;
-    puts("Numero invalido!");
-  } while (true);
+  new_flight->number = flight_id;
 
   printf("Digite uma origem para o voo:\n");
   scanf(" %50[^\n]", new_flight->origin);
@@ -384,7 +378,6 @@ Flight *insert_flight_helper(Flight *root)
 
   if (!is_tree_balanced(root))
   {
-    puts("Nao esta balanceada");
     destroy_list();
     append_flights_on_list(root);
     root = generate_flights_tree(flight_list, 0, flight_list_length - 1);
@@ -414,6 +407,14 @@ Flight *delete_flight_helper(Flight *root)
   } while (true);
 
   root = delete_flight(root, number);
+
+  if (!is_tree_balanced(root))
+  {
+    destroy_list();
+    append_flights_on_list(root);
+    root = generate_flights_tree(flight_list, 0, flight_list_length - 1);
+  }
+
   return root;
 }
 
