@@ -100,7 +100,7 @@ void append_on_list(Flight *flight)
     exit(EXIT_FAILURE);
   }
 
-  // Append on last position
+  // Appends on last position
   flight_list[flight_list_length++] = flight;
 }
 
@@ -264,9 +264,6 @@ Flight *delete_flight(Flight *root, int number)
  * from the root node to a leaf node.
  * 
  * The height of an empty tree (NULL pointer) is considered 0.
- *
- * @param flight A pointer to the root node of the binary tree.
- * @return The height of the binary tree.
  */
 int get_tree_height(Flight *flight)
 {
@@ -276,6 +273,12 @@ int get_tree_height(Flight *flight)
   return 1 + get_max_value(get_tree_height(flight->left), get_tree_height(flight->right));
 }
 
+/**
+ * Determines whether the binary tree is balanced or not.
+ * 
+ * A binary tree is considered balanced if the heights of its left and right subtrees
+ * at every node differ by at most 1.
+*/
 bool is_tree_balanced(Flight *root)
 {
   int left_height;
@@ -294,6 +297,13 @@ bool is_tree_balanced(Flight *root)
   return false;
 }
 
+/**
+ * Compares flights based on date and time values.
+ * 
+ * It returns an integer indicating the relative order between fields.
+ * 
+ * It's intended to use as a callback function in qsort algorithm.
+*/
 int compare_flights_by_datetime(const void *a, const void *b)
 {
   Flight *flight_a = *(Flight **)a;
@@ -309,11 +319,14 @@ int compare_flights_by_datetime(const void *a, const void *b)
     return flight_a->date.day - flight_b->date.day;
 
   if (flight_a->time.hours != flight_b->time.hours)
-    return flight_a->time.hours != flight_b->time.hours;
+    return flight_a->time.hours - flight_b->time.hours;
 
-  return flight_a->time.minutes != flight_b->time.minutes;
+  return flight_a->time.minutes - flight_b->time.minutes;
 }
 
+/**
+ * Shows the tree in a way it's easier to see its properties
+*/
 void print_flight_tree(Flight *root, int level)
 {
   if (!root)
@@ -323,6 +336,9 @@ void print_flight_tree(Flight *root, int level)
   print_flight_tree(root->left, level + 4);
 }
 
+/**
+ * Frees tree memory.
+*/
 void destroy_flight_tree(Flight *root)
 {
   if (!root)
@@ -334,6 +350,11 @@ void destroy_flight_tree(Flight *root)
 /* ==================== TREE ==================== */
 
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
+
+/**
+ * Shows all flights that match the specified origin, destiny and date.
+ * Also creates a counter to get the number of matches, to be used by the function that calls this.
+*/
 int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
 {
   int total_count = 0;
@@ -359,6 +380,10 @@ int search_flights_by_data(Flight *root, char *origin, char *destiny, Date date)
   return total_count;
 }
 
+/**
+ * Shows all flights that has less than 10 disponible seats,
+ * creating a counter of all matches to be used in the function that calls this.
+*/
 int list_flight_by_max_seats(Flight *root)
 {
   int total_count = 0;
@@ -379,6 +404,9 @@ int list_flight_by_max_seats(Flight *root)
   return total_count;
 }
 
+/**
+ * Counts all flights from the tree.
+*/
 int count_flights(Flight *root)
 {
   int total_count = 0;
@@ -395,6 +423,10 @@ int count_flights(Flight *root)
   return total_count;
 }
 
+/**
+ * Gets all the flights that have disponible seats and appends to the auxiliary flight list,
+ * to sort by date and time and print the result.
+*/
 int list_flights_with_disponible_seats(Flight *root)
 {
   int total_count = 0;
@@ -417,6 +449,10 @@ int list_flights_with_disponible_seats(Flight *root)
 /* ==================== RECURSIVE OPERATION FUNCTIONS ==================== */
 
 /* ==================== OPERATION FUNCTIONS ==================== */
+
+/**
+ * Registers a new flight.
+*/
 Flight *insert_flight_helper(Flight *root)
 {
   Flight *new_flight = calloc(sizeof(Flight), 1);
@@ -514,6 +550,9 @@ Flight *insert_flight_helper(Flight *root)
   return root;
 }
 
+/**
+ * Removes a flight based on its number.
+*/
 Flight *delete_flight_helper(Flight *root)
 {
   if (!root)
@@ -554,6 +593,9 @@ Flight *delete_flight_helper(Flight *root)
   return root;
 }
 
+/**
+ * Gets the data the user wants to call the recursive function that searches the matches.
+*/
 void search_flights_by_data_helper(Flight *root)
 {
   if (!root)
@@ -611,6 +653,9 @@ void search_flights_by_data_helper(Flight *root)
     puts("Nenhum foi encontrado.");
 }
 
+/**
+ * Starts the function responsible to show all the flights that have less than 10 seats.
+*/
 void list_flights_by_max_seats_helper(Flight *root)
 {
   if (!root)
@@ -626,6 +671,9 @@ void list_flights_by_max_seats_helper(Flight *root)
     puts("Nenhum foi encontrado.");
 }
 
+/**
+ * Starts the function responsible for counting all the disponible flights.
+*/
 void count_flights_helper(Flight *root)
 {
   if (!root)
@@ -638,6 +686,10 @@ void count_flights_helper(Flight *root)
   printf("\nExiste(m) %d voo(s) disponivel(is).\n", disponible_flights);
 }
 
+/**
+ * Deletes data from the flight list, appends all the flights that have disponible seats,
+ * orders the list by date and time and prints on screen.
+*/
 void list_flights_with_disponible_seats_helper(Flight *root)
 {
   if (!root)
@@ -661,6 +713,10 @@ void list_flights_with_disponible_seats_helper(Flight *root)
   print_list();
 }
 
+/**
+ * Generates 7 flight pointers with random data, appending to the flight list,
+ * to generate a brand new tree.
+*/
 Flight *generate_random_flights(Flight *root)
 {
   if (count_flights(root))
@@ -707,6 +763,9 @@ Flight *generate_random_flights(Flight *root)
   return root;
 }
 
+/**
+ * Starts the tree printing recursive function.
+*/
 void print_flight_tree_helper(Flight *root)
 {
   if (!root)
