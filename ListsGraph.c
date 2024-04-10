@@ -91,11 +91,12 @@ void print_graph(Graph *graph) {
     cursor = graph->elements_list[i];
     printf("%d -> ", cursor->value);
     while (cursor->next) {
-      printf("%d -> ", cursor->next->value);
       cursor = cursor->next;
+      printf("%d -> ", cursor->value);
     }
-    printf("\n");
+    printf("X\n");
   }
+  printf("\nNumber of elements: %d\n", graph->num_elements);
 }
 
 void destroy_graph(Graph *graph) {
@@ -113,7 +114,6 @@ int main(void) {
   insert_element(graph, 4);
   insert_element(graph, 5);
 
-  create_link(graph, 1, 1);
   create_link(graph, 1, 1);
 
   print_graph(graph);
