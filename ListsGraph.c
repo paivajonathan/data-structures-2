@@ -113,12 +113,9 @@ int main(void) {
   insert_element(graph, 4);
   insert_element(graph, 5);
 
-  create_link(graph, 1, 2);
-  create_link(graph, 1, 3);
+  create_link(graph, 1, 1);
+  create_link(graph, 1, 1);
 
-  create_link(graph, 1, 4);
-  create_link(graph, 1, 4);
-  
   print_graph(graph);
   destroy_graph(graph);
   return 0;
