@@ -66,13 +66,19 @@ void create_link(Graph *graph, int source_value, int destination_value) {
   if (!destination_element) return;
 
   Node *cursor = source_element;
-  while (cursor->next)
+  while (cursor->next) {
     cursor = cursor->next;
+    if (cursor->value == destination_value)
+      return;
+  }
   cursor->next = create_node(destination_value);
 
   cursor = destination_element;
-  while (cursor->next)
+  while (cursor->next) {
     cursor = cursor->next;
+    if (cursor->value == source_value)
+      return;
+  }
   cursor->next = create_node(source_value);
   
   cursor = NULL;
@@ -108,7 +114,10 @@ int main(void) {
   insert_element(graph, 5);
 
   create_link(graph, 1, 2);
-  create_link(graph, 1, 2);
+  create_link(graph, 1, 3);
+
+  create_link(graph, 1, 4);
+  create_link(graph, 1, 4);
   
   print_graph(graph);
   destroy_graph(graph);
